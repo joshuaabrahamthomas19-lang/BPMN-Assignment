@@ -1,0 +1,2739 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_logistics_shipment" targetNamespace="https://example.org/assignments">
+  <bpmn:process id="logistics_shipment" name="Assignment 2 - Logistics and Shipment Exception Management" isExecutable="false">
+    <bpmn:laneSet id="logistics_shipment_lanes">
+      <bpmn:lane id="logistics_shipment_lane_0" name="Shipper / Customer">
+        <bpmn:flowNodeRef>L_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_booking_stage</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_booking_stage_catch_L_cancel_charge</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="logistics_shipment_lane_1" name="Control Tower / Dispatcher">
+        <bpmn:flowNodeRef>L_init</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_cancel_charge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_cancelled</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_charge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_charge_comp</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_refund</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_shipment</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_cancel_message</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_stop</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_compensate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_return</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_returned</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_return_catch</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_lost_catch</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_lost</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_close</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_delivered</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="logistics_shipment_lane_2" name="Pickup Agent">
+        <bpmn:flowNodeRef>L_pickup</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>L_pick_cancel_catch</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="logistics_shipment_lane_3" name="Claims Department">
+        <bpmn:flowNodeRef>L_compensation</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="L_start" name="Shipper books shipment">
+      <bpmn:outgoing>Flow_L_start_L_init</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="L_init" name="Open Shipment Record">
+      <bpmn:incoming>Flow_L_start_L_init</bpmn:incoming>
+      <bpmn:outgoing>Flow_L_init_L_booking</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:subProcess id="L_pickup" name="Collect Parcel">
+      <bpmn:incoming>Flow_L_booking_stage_L_pickup</bpmn:incoming>
+      <bpmn:outgoing>Flow_L_pickup_L_charge</bpmn:outgoing>
+      <bpmn:laneSet id="L_pickup_lanes">
+        <bpmn:lane id="L_pickup_lane_0" name="Pickup Agent">
+          <bpmn:flowNodeRef>L_pick_start</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_collect</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_pick_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_pick_cancel</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_pick_end</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_pick_exception</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_pick_capture</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_packaging</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_packing_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_repack</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_recheck_packing</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_repacked_gate</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="L_pickup_lane_1" name="Control Tower / Dispatcher">
+          <bpmn:flowNodeRef>L_pick_count</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_pick_limit</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_reschedule</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_pick_wait</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+      <bpmn:startEvent id="L_pick_start" name="Pickup starts">
+        <bpmn:outgoing>Flow_L_pick_start_L_collect</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="L_collect" name="Collect parcel and capture pickup scan">
+        <bpmn:incoming>Flow_L_pick_start_L_collect</bpmn:incoming>
+        <bpmn:incoming>Flow_L_pick_wait_L_collect</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_collect_L_pick_gate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="L_pick_gate" name="Pickup result" default="Flow_L_pick_gate_L_pick_count">
+        <bpmn:incoming>Flow_L_pick_capture_L_pick_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_pick_gate_L_pick_end</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_pick_gate_L_pick_count</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="L_pick_count" name="Count failed pickup">
+        <bpmn:incoming>Flow_L_pick_gate_L_pick_count</bpmn:incoming>
+        <bpmn:incoming>Flow_L_pick_exception_L_pick_count</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_pick_count_L_pick_limit</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="L_pick_limit" name="Two failures reached?" default="Flow_L_pick_limit_L_reschedule">
+        <bpmn:incoming>Flow_L_pick_count_L_pick_limit</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_pick_limit_L_pick_cancel</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_pick_limit_L_reschedule</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="L_reschedule" name="Reschedule pickup">
+        <bpmn:incoming>Flow_L_pick_limit_L_reschedule</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_reschedule_L_pick_wait</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:intermediateCatchEvent id="L_pick_wait" name="Wait before new pickup">
+        <bpmn:incoming>Flow_L_reschedule_L_pick_wait</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_pick_wait_L_collect</bpmn:outgoing>
+        <bpmn:timerEventDefinition>
+          <bpmn:timeDuration>P1D</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:intermediateCatchEvent>
+      <bpmn:endEvent id="L_pick_cancel" name="Pickup attempts exhausted">
+        <bpmn:incoming>Flow_L_pick_limit_L_pick_cancel</bpmn:incoming>
+        <bpmn:incoming>Flow_L_repacked_gate_L_pick_cancel</bpmn:incoming>
+        <bpmn:errorEventDefinition errorRef="logistics_shipment_err_CANCEL_BOOKING" />
+      </bpmn:endEvent>
+      <bpmn:endEvent id="L_pick_end" name="Parcel collected">
+        <bpmn:incoming>Flow_L_packing_gate_L_pick_end</bpmn:incoming>
+        <bpmn:incoming>Flow_L_repacked_gate_L_pick_end</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_L_pick_start_L_collect" sourceRef="L_pick_start" targetRef="L_collect" />
+      <bpmn:sequenceFlow id="Flow_L_collect_L_pick_gate" sourceRef="L_collect" targetRef="L_pick_capture" />
+      <bpmn:sequenceFlow id="Flow_L_pick_gate_L_pick_end" sourceRef="L_pick_gate" targetRef="L_packaging" name="Collected">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= pickupOutcome = "collected"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_pick_gate_L_pick_count" sourceRef="L_pick_gate" targetRef="L_pick_count" name="Failed" />
+      <bpmn:sequenceFlow id="Flow_L_pick_count_L_pick_limit" sourceRef="L_pick_count" targetRef="L_pick_limit" />
+      <bpmn:sequenceFlow id="Flow_L_pick_limit_L_pick_cancel" sourceRef="L_pick_limit" targetRef="L_pick_cancel" name="Two failures">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= pickupFailures &gt;= 2</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_pick_limit_L_reschedule" sourceRef="L_pick_limit" targetRef="L_reschedule" name="Reschedule" />
+      <bpmn:sequenceFlow id="Flow_L_reschedule_L_pick_wait" sourceRef="L_reschedule" targetRef="L_pick_wait" />
+      <bpmn:sequenceFlow id="Flow_L_pick_wait_L_collect" sourceRef="L_pick_wait" targetRef="L_collect" />
+      <bpmn:boundaryEvent id="L_pick_exception" name="Pickup execution failure" attachedToRef="L_pick_capture" cancelActivity="true">
+        <bpmn:outgoing>Flow_L_pick_exception_L_pick_count</bpmn:outgoing>
+        <bpmn:errorEventDefinition errorRef="logistics_shipment_err_PICKUP_FAILURE" />
+      </bpmn:boundaryEvent>
+      <bpmn:sequenceFlow id="Flow_L_pick_exception_L_pick_count" sourceRef="L_pick_exception" targetRef="L_pick_count" />
+      <bpmn:serviceTask id="L_pick_capture" name="Persist pickup scan and report execution error">
+        <bpmn:incoming>Flow_L_collect_L_pick_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_pick_capture_L_pick_gate</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_L_pick_capture_L_pick_gate" sourceRef="L_pick_capture" targetRef="L_pick_gate" />
+      <bpmn:userTask id="L_packaging" name="Check Parcel Packaging">
+        <bpmn:incoming>Flow_L_pick_gate_L_pick_end</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_packaging_L_pick_end</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:sequenceFlow id="Flow_L_packaging_L_pick_end" sourceRef="L_packaging" targetRef="L_packing_gate" />
+      <bpmn:exclusiveGateway id="L_packing_gate" name="Packaging Safe for Transport?" default="Flow_L_packing_gate_L_repack">
+        <bpmn:incoming>Flow_L_packaging_L_pick_end</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_packing_gate_L_pick_end</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_packing_gate_L_repack</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="L_repack" name="Ask Shipper to Repack Parcel">
+        <bpmn:incoming>Flow_L_packing_gate_L_repack</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_repack_L_recheck_packing</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="L_recheck_packing" name="Check Repacked Parcel">
+        <bpmn:incoming>Flow_L_repack_L_recheck_packing</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_recheck_packing_L_repacked_gate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="L_repacked_gate" name="Packing Issue Resolved?" default="Flow_L_repacked_gate_L_pick_cancel">
+        <bpmn:incoming>Flow_L_recheck_packing_L_repacked_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_repacked_gate_L_pick_end</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_repacked_gate_L_pick_cancel</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:sequenceFlow id="Flow_L_packing_gate_L_pick_end" sourceRef="L_packing_gate" targetRef="L_pick_end" name="Safe">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= packagingSafe = true</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_packing_gate_L_repack" sourceRef="L_packing_gate" targetRef="L_repack" name="Needs correction" />
+      <bpmn:sequenceFlow id="Flow_L_repack_L_recheck_packing" sourceRef="L_repack" targetRef="L_recheck_packing" />
+      <bpmn:sequenceFlow id="Flow_L_recheck_packing_L_repacked_gate" sourceRef="L_recheck_packing" targetRef="L_repacked_gate" />
+      <bpmn:sequenceFlow id="Flow_L_repacked_gate_L_pick_end" sourceRef="L_repacked_gate" targetRef="L_pick_end" name="Safe after repacking">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= repackingAccepted = true</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_repacked_gate_L_pick_cancel" sourceRef="L_repacked_gate" targetRef="L_pick_cancel" name="Unsafe or refused" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="L_pick_cancel_catch" name="Cancel pickup booking" attachedToRef="L_pickup" cancelActivity="true">
+      <bpmn:outgoing>Flow_L_pick_cancel_catch_L_cancel_charge</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="logistics_shipment_err_CANCEL_BOOKING" />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="L_cancel_charge" name="Charge cancellation fee and notify">
+      <bpmn:incoming>Flow_L_pick_cancel_catch_L_cancel_charge</bpmn:incoming>
+      <bpmn:incoming>Flow_L_booking_stage_catch_L_cancel_charge_L_cancel_charge</bpmn:incoming>
+      <bpmn:outgoing>Flow_L_cancel_charge_L_cancelled</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="L_cancelled" name="Shipment cancelled">
+      <bpmn:incoming>Flow_L_cancel_charge_L_cancelled</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_L_pick_cancel_catch_L_cancel_charge" sourceRef="L_pick_cancel_catch" targetRef="L_cancel_charge" />
+    <bpmn:sequenceFlow id="Flow_L_cancel_charge_L_cancelled" sourceRef="L_cancel_charge" targetRef="L_cancelled" />
+    <bpmn:serviceTask id="L_charge" name="Record Shipment Charges">
+      <bpmn:incoming>Flow_L_pickup_L_charge</bpmn:incoming>
+      <bpmn:outgoing>Flow_L_charge_L_shipment</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="L_charge_comp" name="Compensation" attachedToRef="L_charge" cancelActivity="false">
+      <bpmn:compensateEventDefinition />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="L_refund" name="Refund charge minus cancellation fee idempotently" isForCompensation="true">
+      </bpmn:serviceTask>
+    <bpmn:subProcess id="L_shipment" name="Move Parcel and Deliver">
+      <bpmn:incoming>Flow_L_charge_L_shipment</bpmn:incoming>
+      <bpmn:outgoing>Flow_L_shipment_L_close</bpmn:outgoing>
+      <bpmn:laneSet id="L_shipment_lanes">
+        <bpmn:lane id="L_shipment_lane_0" name="Control Tower / Dispatcher">
+          <bpmn:flowNodeRef>L_ship_start</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_parallel</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_track_fail</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_track_reconcile</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_join</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_out</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_delivery_count</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_delivery_limit</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_delivery_wait</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_depot_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_ship_return</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_surcharge_rule</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_surcharge_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_surcharge_accept</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_address_limit</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_address_count</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_ship_end</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_tracking_merge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_dispatch_merge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_delivery_instructions</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_check_proof</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_proof_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_recover_proof</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="L_shipment_lane_1" name="Shipper / Customer">
+          <bpmn:flowNodeRef>L_notify_shipper</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_track_error</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_surcharge</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="L_shipment_lane_2" name="Hub / Warehouse">
+          <bpmn:flowNodeRef>L_legs</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="L_shipment_lane_3" name="Recipient">
+          <bpmn:flowNodeRef>L_recipient_notice</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_hold_notice</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_hold</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_hold_timeout</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_address_request</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_address</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_address_timeout</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="L_shipment_lane_4" name="Delivery Agent">
+          <bpmn:flowNodeRef>L_deliver</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_delivery_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_depot_pod</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="L_shipment_lane_5" name="Claims Department">
+          <bpmn:flowNodeRef>L_delivery_damage</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_delivery_claim_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_delivery_replace</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_delivery_refund</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_reship_gate</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+      <bpmn:startEvent id="L_ship_start" name="Dispatch begins">
+        <bpmn:outgoing>Flow_L_ship_start_L_parallel</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:parallelGateway id="L_parallel" name="Move and track together">
+        <bpmn:incoming>Flow_L_dispatch_merge_L_parallel</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_parallel_L_legs</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_parallel_L_notify_shipper</bpmn:outgoing>
+      </bpmn:parallelGateway>
+      <bpmn:sendTask id="L_notify_shipper" name="Update tracking and notify shipper">
+        <bpmn:incoming>Flow_L_parallel_L_notify_shipper</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_notify_shipper_L_join</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:userTask id="L_track_fail" name="Manual tracking update">
+        <bpmn:incoming>Flow_L_track_error_L_track_fail</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_track_fail_L_track_reconcile</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:serviceTask id="L_track_reconcile" name="Reconcile tracking record">
+        <bpmn:incoming>Flow_L_track_fail_L_track_reconcile</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_track_reconcile_L_join</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:boundaryEvent id="L_track_error" name="Tracking system failed" attachedToRef="L_notify_shipper" cancelActivity="true">
+        <bpmn:outgoing>Flow_L_track_error_L_track_fail</bpmn:outgoing>
+        <bpmn:errorEventDefinition errorRef="logistics_shipment_err_SCAN_FAILURE" />
+      </bpmn:boundaryEvent>
+      <bpmn:sequenceFlow id="Flow_L_track_error_L_track_fail" sourceRef="L_track_error" targetRef="L_track_fail" />
+      <bpmn:sequenceFlow id="Flow_L_track_fail_L_track_reconcile" sourceRef="L_track_fail" targetRef="L_track_reconcile" />
+      <bpmn:subProcess id="L_legs" name="Hub sorting scans and line haul per leg">
+        <bpmn:incoming>Flow_L_parallel_L_legs</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_legs_L_join</bpmn:outgoing>
+        <bpmn:multiInstanceLoopCharacteristics isSequential="true">
+          <bpmn:loopCardinality>numberOfShipmentLegs</bpmn:loopCardinality>
+        </bpmn:multiInstanceLoopCharacteristics>
+        <bpmn:laneSet id="L_legs_lanes">
+          <bpmn:lane id="L_legs_lane_0" name="Hub / Warehouse">
+            <bpmn:flowNodeRef>L_leg_start</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_sort</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_scan</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_scan_error</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_manual_scan</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_reconcile</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_damage_gate</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_customs_gate</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_customs_check</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_customs_result</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_doc_review</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_doc_gate</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_leg_return</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_leg_end</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_movement</bpmn:flowNodeRef>
+          </bpmn:lane>
+          <bpmn:lane id="L_legs_lane_1" name="Shipper / Customer">
+            <bpmn:flowNodeRef>L_doc_request</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_documents</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_doc_timeout</bpmn:flowNodeRef>
+          </bpmn:lane>
+          <bpmn:lane id="L_legs_lane_2" name="Control Tower / Dispatcher">
+            <bpmn:flowNodeRef>L_doc_limit</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>L_doc_count</bpmn:flowNodeRef>
+          </bpmn:lane>
+          <bpmn:lane id="L_legs_lane_3" name="Claims Department">
+            <bpmn:flowNodeRef>L_damage</bpmn:flowNodeRef>
+          </bpmn:lane>
+        </bpmn:laneSet>
+        <bpmn:startEvent id="L_leg_start" name="Leg begins">
+          <bpmn:outgoing>Flow_L_leg_start_L_sort</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:userTask id="L_sort" name="Sort parcel at hub">
+          <bpmn:incoming>Flow_L_leg_start_L_sort</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_sort_L_scan</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:serviceTask id="L_scan" name="Scan parcel and persist hub scan">
+          <bpmn:incoming>Flow_L_sort_L_scan</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_scan_L_damage_gate</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:boundaryEvent id="L_scan_error" name="Scan failure" attachedToRef="L_scan" cancelActivity="true">
+          <bpmn:outgoing>Flow_L_scan_error_L_manual_scan</bpmn:outgoing>
+          <bpmn:errorEventDefinition errorRef="logistics_shipment_err_SCAN_FAILURE" />
+        </bpmn:boundaryEvent>
+        <bpmn:userTask id="L_manual_scan" name="Supervisor captures scan manually">
+          <bpmn:incoming>Flow_L_scan_error_L_manual_scan</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_manual_scan_L_reconcile</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:serviceTask id="L_reconcile" name="Reconcile scan and tracking">
+          <bpmn:incoming>Flow_L_manual_scan_L_reconcile</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_reconcile_L_damage_gate</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:exclusiveGateway id="L_damage_gate" name="Damage detected?" default="Flow_L_damage_gate_L_customs_gate">
+          <bpmn:incoming>Flow_L_scan_L_damage_gate</bpmn:incoming>
+          <bpmn:incoming>Flow_L_reconcile_L_damage_gate</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_damage_gate_L_damage</bpmn:outgoing>
+          <bpmn:outgoing>Flow_L_damage_gate_L_customs_gate</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:exclusiveGateway id="L_customs_gate" name="International leg requires clearance?" default="Flow_L_customs_gate_L_move">
+          <bpmn:incoming>Flow_L_damage_gate_L_customs_gate</bpmn:incoming>
+          <bpmn:incoming>Flow_L_damage_L_customs_gate</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_customs_gate_L_customs_check</bpmn:outgoing>
+          <bpmn:outgoing>Flow_L_customs_gate_L_move</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:userTask id="L_customs_check" name="Customs clearance decision">
+          <bpmn:incoming>Flow_L_customs_gate_L_customs_check</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_customs_check_L_customs_result</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:exclusiveGateway id="L_customs_result" name="Customs outcome" default="Flow_L_customs_result_L_doc_request">
+          <bpmn:incoming>Flow_L_customs_check_L_customs_result</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_customs_result_L_move</bpmn:outgoing>
+          <bpmn:outgoing>Flow_L_customs_result_L_doc_request</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:sendTask id="L_doc_request" name="Request corrected customs documents">
+          <bpmn:incoming>Flow_L_customs_result_L_doc_request</bpmn:incoming>
+          <bpmn:incoming>Flow_L_doc_count_L_doc_request</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_doc_request_L_documents</bpmn:outgoing>
+        </bpmn:sendTask>
+        <bpmn:receiveTask id="L_documents" name="Wait for shipper customs documents" messageRef="logistics_shipment_msg_customs_documents">
+          <bpmn:incoming>Flow_L_doc_request_L_documents</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_documents_L_doc_review</bpmn:outgoing>
+        </bpmn:receiveTask>
+        <bpmn:boundaryEvent id="L_doc_timeout" name="Five day documents deadline" attachedToRef="L_documents" cancelActivity="true">
+          <bpmn:outgoing>Flow_L_doc_timeout_L_leg_return</bpmn:outgoing>
+          <bpmn:timerEventDefinition>
+            <bpmn:timeDuration>P5D</bpmn:timeDuration>
+          </bpmn:timerEventDefinition>
+        </bpmn:boundaryEvent>
+        <bpmn:userTask id="L_doc_review" name="Validate customs documents">
+          <bpmn:incoming>Flow_L_documents_L_doc_review</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_doc_review_L_doc_gate</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:exclusiveGateway id="L_doc_gate" name="Documents accepted?" default="Flow_L_doc_gate_L_doc_limit">
+          <bpmn:incoming>Flow_L_doc_review_L_doc_gate</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_doc_gate_L_move</bpmn:outgoing>
+          <bpmn:outgoing>Flow_L_doc_gate_L_doc_limit</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:exclusiveGateway id="L_doc_limit" name="Document correction below two?" default="Flow_L_doc_limit_L_leg_return">
+          <bpmn:incoming>Flow_L_doc_gate_L_doc_limit</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_doc_limit_L_doc_count</bpmn:outgoing>
+          <bpmn:outgoing>Flow_L_doc_limit_L_leg_return</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:serviceTask id="L_doc_count" name="Count document correction">
+          <bpmn:incoming>Flow_L_doc_limit_L_doc_count</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_doc_count_L_doc_request</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:endEvent id="L_leg_return" name="Return required">
+          <bpmn:incoming>Flow_L_doc_limit_L_leg_return</bpmn:incoming>
+          <bpmn:incoming>Flow_L_doc_timeout_L_leg_return</bpmn:incoming>
+          <bpmn:errorEventDefinition errorRef="logistics_shipment_err_RETURN_REQUIRED" />
+        </bpmn:endEvent>
+        <bpmn:endEvent id="L_leg_end" name="Leg movement complete">
+          <bpmn:incoming>Flow_L_movement_L_leg_end</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:subProcess id="L_damage" name="Inspect damage and handle claim">
+          <bpmn:incoming>Flow_L_damage_gate_L_damage</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_damage_L_customs_gate</bpmn:outgoing>
+          <bpmn:laneSet id="L_damage_lanes">
+            <bpmn:lane id="L_damage_lane_0" name="Claims Department">
+              <bpmn:flowNodeRef>L_damage_start</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_inspect</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_insured</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_claim</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_claim_gate</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_claim_refund</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_replace</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_damage_return</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_damage_end</bpmn:flowNodeRef>
+            </bpmn:lane>
+            <bpmn:lane id="L_damage_lane_1" name="Shipper / Customer">
+              <bpmn:flowNodeRef>L_uninsured</bpmn:flowNodeRef>
+            </bpmn:lane>
+          </bpmn:laneSet>
+          <bpmn:startEvent id="L_damage_start" name="Damage inspection begins">
+            <bpmn:outgoing>Flow_L_damage_start_L_inspect</bpmn:outgoing>
+          </bpmn:startEvent>
+          <bpmn:userTask id="L_inspect" name="Inspect damage">
+            <bpmn:incoming>Flow_L_damage_start_L_inspect</bpmn:incoming>
+            <bpmn:outgoing>Flow_L_inspect_L_insured</bpmn:outgoing>
+          </bpmn:userTask>
+          <bpmn:exclusiveGateway id="L_insured" name="Insured?" default="Flow_L_insured_L_uninsured">
+            <bpmn:incoming>Flow_L_inspect_L_insured</bpmn:incoming>
+            <bpmn:outgoing>Flow_L_insured_L_claim</bpmn:outgoing>
+            <bpmn:outgoing>Flow_L_insured_L_uninsured</bpmn:outgoing>
+          </bpmn:exclusiveGateway>
+          <bpmn:userTask id="L_claim" name="Resolve insured claim">
+            <bpmn:incoming>Flow_L_insured_L_claim</bpmn:incoming>
+            <bpmn:outgoing>Flow_L_claim_L_claim_gate</bpmn:outgoing>
+          </bpmn:userTask>
+          <bpmn:exclusiveGateway id="L_claim_gate" name="Claim resolution" default="Flow_L_claim_gate_L_replace">
+            <bpmn:incoming>Flow_L_claim_L_claim_gate</bpmn:incoming>
+            <bpmn:outgoing>Flow_L_claim_gate_L_claim_refund</bpmn:outgoing>
+            <bpmn:outgoing>Flow_L_claim_gate_L_replace</bpmn:outgoing>
+          </bpmn:exclusiveGateway>
+          <bpmn:serviceTask id="L_claim_refund" name="Pay claim refund and inform shipper">
+            <bpmn:incoming>Flow_L_claim_gate_L_claim_refund</bpmn:incoming>
+            <bpmn:outgoing>Flow_L_claim_refund_L_damage_return</bpmn:outgoing>
+          </bpmn:serviceTask>
+          <bpmn:serviceTask id="L_replace" name="Replace or reship parcel">
+            <bpmn:incoming>Flow_L_claim_gate_L_replace</bpmn:incoming>
+            <bpmn:outgoing>Flow_L_replace_L_damage_end</bpmn:outgoing>
+          </bpmn:serviceTask>
+          <bpmn:sendTask id="L_uninsured" name="Record uninsured damage and inform shipper">
+            <bpmn:incoming>Flow_L_insured_L_uninsured</bpmn:incoming>
+            <bpmn:outgoing>Flow_L_uninsured_L_damage_return</bpmn:outgoing>
+          </bpmn:sendTask>
+          <bpmn:endEvent id="L_damage_return" name="Damaged parcel return">
+            <bpmn:incoming>Flow_L_uninsured_L_damage_return</bpmn:incoming>
+            <bpmn:incoming>Flow_L_claim_refund_L_damage_return</bpmn:incoming>
+            <bpmn:errorEventDefinition errorRef="logistics_shipment_err_RETURN_REQUIRED" />
+          </bpmn:endEvent>
+          <bpmn:endEvent id="L_damage_end" name="Replacement or reshipment ready">
+            <bpmn:incoming>Flow_L_replace_L_damage_end</bpmn:incoming>
+          </bpmn:endEvent>
+          <bpmn:sequenceFlow id="Flow_L_damage_start_L_inspect" sourceRef="L_damage_start" targetRef="L_inspect" />
+          <bpmn:sequenceFlow id="Flow_L_inspect_L_insured" sourceRef="L_inspect" targetRef="L_insured" />
+          <bpmn:sequenceFlow id="Flow_L_insured_L_claim" sourceRef="L_insured" targetRef="L_claim" name="Insured">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= insured = true</bpmn:conditionExpression>
+          </bpmn:sequenceFlow>
+          <bpmn:sequenceFlow id="Flow_L_insured_L_uninsured" sourceRef="L_insured" targetRef="L_uninsured" name="Uninsured" />
+          <bpmn:sequenceFlow id="Flow_L_uninsured_L_damage_return" sourceRef="L_uninsured" targetRef="L_damage_return" />
+          <bpmn:sequenceFlow id="Flow_L_claim_L_claim_gate" sourceRef="L_claim" targetRef="L_claim_gate" />
+          <bpmn:sequenceFlow id="Flow_L_claim_gate_L_claim_refund" sourceRef="L_claim_gate" targetRef="L_claim_refund" name="Refund">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= claimOutcome = "refund"</bpmn:conditionExpression>
+          </bpmn:sequenceFlow>
+          <bpmn:sequenceFlow id="Flow_L_claim_gate_L_replace" sourceRef="L_claim_gate" targetRef="L_replace" name="Replace or reship" />
+          <bpmn:sequenceFlow id="Flow_L_claim_refund_L_damage_return" sourceRef="L_claim_refund" targetRef="L_damage_return" />
+          <bpmn:sequenceFlow id="Flow_L_replace_L_damage_end" sourceRef="L_replace" targetRef="L_damage_end" />
+        </bpmn:subProcess>
+        <bpmn:sequenceFlow id="Flow_L_leg_start_L_sort" sourceRef="L_leg_start" targetRef="L_sort" />
+        <bpmn:sequenceFlow id="Flow_L_sort_L_scan" sourceRef="L_sort" targetRef="L_scan" />
+        <bpmn:sequenceFlow id="Flow_L_scan_L_damage_gate" sourceRef="L_scan" targetRef="L_damage_gate" />
+        <bpmn:sequenceFlow id="Flow_L_scan_error_L_manual_scan" sourceRef="L_scan_error" targetRef="L_manual_scan" />
+        <bpmn:sequenceFlow id="Flow_L_manual_scan_L_reconcile" sourceRef="L_manual_scan" targetRef="L_reconcile" />
+        <bpmn:sequenceFlow id="Flow_L_reconcile_L_damage_gate" sourceRef="L_reconcile" targetRef="L_damage_gate" />
+        <bpmn:sequenceFlow id="Flow_L_damage_gate_L_damage" sourceRef="L_damage_gate" targetRef="L_damage" name="Damaged">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= parcelCondition = "damaged"</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="Flow_L_damage_gate_L_customs_gate" sourceRef="L_damage_gate" targetRef="L_customs_gate" name="Intact" />
+        <bpmn:sequenceFlow id="Flow_L_damage_L_customs_gate" sourceRef="L_damage" targetRef="L_customs_gate" />
+        <bpmn:sequenceFlow id="Flow_L_customs_gate_L_customs_check" sourceRef="L_customs_gate" targetRef="L_customs_check" name="International">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= international = true</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="Flow_L_customs_gate_L_move" sourceRef="L_customs_gate" targetRef="L_movement" name="Domestic" />
+        <bpmn:sequenceFlow id="Flow_L_customs_check_L_customs_result" sourceRef="L_customs_check" targetRef="L_customs_result" />
+        <bpmn:sequenceFlow id="Flow_L_customs_result_L_move" sourceRef="L_customs_result" targetRef="L_movement" name="Clear">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= customsOutcome = "clear"</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="Flow_L_customs_result_L_doc_request" sourceRef="L_customs_result" targetRef="L_doc_request" name="Hold" />
+        <bpmn:sequenceFlow id="Flow_L_doc_request_L_documents" sourceRef="L_doc_request" targetRef="L_documents" />
+        <bpmn:sequenceFlow id="Flow_L_documents_L_doc_review" sourceRef="L_documents" targetRef="L_doc_review" />
+        <bpmn:sequenceFlow id="Flow_L_doc_review_L_doc_gate" sourceRef="L_doc_review" targetRef="L_doc_gate" />
+        <bpmn:sequenceFlow id="Flow_L_doc_gate_L_move" sourceRef="L_doc_gate" targetRef="L_movement" name="Valid">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= documentsValid = "yes"</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="Flow_L_doc_gate_L_doc_limit" sourceRef="L_doc_gate" targetRef="L_doc_limit" name="Invalid" />
+        <bpmn:sequenceFlow id="Flow_L_doc_limit_L_doc_count" sourceRef="L_doc_limit" targetRef="L_doc_count" name="Correct again">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= documentCorrections &lt; 2</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="Flow_L_doc_limit_L_leg_return" sourceRef="L_doc_limit" targetRef="L_leg_return" name="Exhausted" />
+        <bpmn:sequenceFlow id="Flow_L_doc_count_L_doc_request" sourceRef="L_doc_count" targetRef="L_doc_request" />
+        <bpmn:sequenceFlow id="Flow_L_doc_timeout_L_leg_return" sourceRef="L_doc_timeout" targetRef="L_leg_return" />
+        <bpmn:subProcess id="L_movement" name="Movement with last-scan watchdog">
+          <bpmn:incoming>Flow_L_customs_gate_L_move</bpmn:incoming>
+          <bpmn:incoming>Flow_L_customs_result_L_move</bpmn:incoming>
+          <bpmn:incoming>Flow_L_doc_gate_L_move</bpmn:incoming>
+          <bpmn:outgoing>Flow_L_movement_L_leg_end</bpmn:outgoing>
+          <bpmn:laneSet id="L_movement_lanes">
+            <bpmn:lane id="L_movement_lane_0" name="Hub / Warehouse">
+              <bpmn:flowNodeRef>L_move</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_arrival</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_arrival_wait</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_move_start</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_move_end</bpmn:flowNodeRef>
+            </bpmn:lane>
+            <bpmn:lane id="L_movement_lane_1" name="Control Tower / Dispatcher">
+              <bpmn:flowNodeRef>L_event_gate</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_delay</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_eta</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_reroute</bpmn:flowNodeRef>
+              <bpmn:flowNodeRef>L_watchdog</bpmn:flowNodeRef>
+            </bpmn:lane>
+          </bpmn:laneSet>
+          <bpmn:serviceTask id="L_move" name="Dispatch line haul movement">
+            <bpmn:incoming>Flow_L_move_start_L_move</bpmn:incoming>
+            <bpmn:outgoing>Flow_L_move_L_event_gate</bpmn:outgoing>
+          </bpmn:serviceTask>
+          <bpmn:eventBasedGateway id="L_event_gate" name="Wait for arrival delay or ETA timer">
+            <bpmn:incoming>Flow_L_move_L_event_gate</bpmn:incoming>
+            <bpmn:outgoing>Flow_L_event_gate_L_arrival</bpmn:outgoing>
+            <bpmn:outgoing>Flow_L_event_gate_L_delay</bpmn:outgoing>
+            <bpmn:outgoing>Flow_L_event_gate_L_eta</bpmn:outgoing>
+          </bpmn:eventBasedGateway>
+          <bpmn:intermediateCatchEvent id="L_arrival" name="Destination hub scan received">
+            <bpmn:incoming>Flow_L_event_gate_L_arrival</bpmn:incoming>
+            <bpmn:outgoing>Flow_L_arrival_L_leg_end</bpmn:outgoing>
+            <bpmn:messageEventDefinition messageRef="logistics_shipment_msg_leg_arrived" />
+          </bpmn:intermediateCatchEvent>
+          <bpmn:intermediateCatchEvent id="L_delay" name="Transit delay message">
+            <bpmn:incoming>Flow_L_event_gate_L_delay</bpmn:incoming>
+            <bpmn:outgoing>Flow_L_delay_L_reroute</bpmn:outgoing>
+            <bpmn:messageEventDefinition messageRef="logistics_shipment_msg_transit_delay" />
+          </bpmn:intermediateCatchEvent>
+          <bpmn:intermediateCatchEvent id="L_eta" name="ETA exceeded">
+            <bpmn:incoming>Flow_L_event_gate_L_eta</bpmn:incoming>
+            <bpmn:outgoing>Flow_L_eta_L_reroute</bpmn:outgoing>
+            <bpmn:timerEventDefinition>
+              <bpmn:timeDuration>P1D</bpmn:timeDuration>
+            </bpmn:timerEventDefinition>
+          </bpmn:intermediateCatchEvent>
+          <bpmn:sendTask id="L_reroute" name="Notify delay reroute alternate vehicle update ETA">
+            <bpmn:incoming>Flow_L_delay_L_reroute</bpmn:incoming>
+            <bpmn:incoming>Flow_L_eta_L_reroute</bpmn:incoming>
+            <bpmn:outgoing>Flow_L_reroute_L_arrival_wait</bpmn:outgoing>
+          </bpmn:sendTask>
+          <bpmn:receiveTask id="L_arrival_wait" name="Wait for next destination scan" messageRef="logistics_shipment_msg_leg_arrived">
+            <bpmn:incoming>Flow_L_reroute_L_arrival_wait</bpmn:incoming>
+            <bpmn:outgoing>Flow_L_arrival_wait_L_leg_end</bpmn:outgoing>
+          </bpmn:receiveTask>
+          <bpmn:subProcess id="L_watchdog" name="Missing scan watchdog" triggeredByEvent="true">
+            <bpmn:laneSet id="L_watchdog_lanes">
+              <bpmn:lane id="L_watchdog_lane_0" name="Control Tower / Dispatcher">
+                <bpmn:flowNodeRef>L_missing_start</bpmn:flowNodeRef>
+                <bpmn:flowNodeRef>L_trace</bpmn:flowNodeRef>
+                <bpmn:flowNodeRef>L_trace_timeout</bpmn:flowNodeRef>
+                <bpmn:flowNodeRef>L_trace_gate</bpmn:flowNodeRef>
+                <bpmn:flowNodeRef>L_trace_found</bpmn:flowNodeRef>
+                <bpmn:flowNodeRef>L_lost_error</bpmn:flowNodeRef>
+              </bpmn:lane>
+            </bpmn:laneSet>
+            <bpmn:startEvent id="L_missing_start" name="No arrival scan for 48 hours" isInterrupting="true">
+              <bpmn:outgoing>Flow_L_missing_start_L_trace</bpmn:outgoing>
+              <bpmn:timerEventDefinition>
+                <bpmn:timeDuration>P2D</bpmn:timeDuration>
+              </bpmn:timerEventDefinition>
+            </bpmn:startEvent>
+            <bpmn:userTask id="L_trace" name="Trace parcel and confirm destination">
+              <bpmn:incoming>Flow_L_missing_start_L_trace</bpmn:incoming>
+              <bpmn:outgoing>Flow_L_trace_L_trace_gate</bpmn:outgoing>
+            </bpmn:userTask>
+            <bpmn:boundaryEvent id="L_trace_timeout" name="Five day trace deadline" attachedToRef="L_trace" cancelActivity="true">
+              <bpmn:outgoing>Flow_L_trace_timeout_L_lost_error</bpmn:outgoing>
+              <bpmn:timerEventDefinition>
+                <bpmn:timeDuration>P5D</bpmn:timeDuration>
+              </bpmn:timerEventDefinition>
+            </bpmn:boundaryEvent>
+            <bpmn:exclusiveGateway id="L_trace_gate" name="Parcel found?" default="Flow_L_trace_gate_L_lost_error">
+              <bpmn:incoming>Flow_L_trace_L_trace_gate</bpmn:incoming>
+              <bpmn:outgoing>Flow_L_trace_gate_L_trace_found</bpmn:outgoing>
+              <bpmn:outgoing>Flow_L_trace_gate_L_lost_error</bpmn:outgoing>
+            </bpmn:exclusiveGateway>
+            <bpmn:endEvent id="L_trace_found" name="Tracing completed leg at destination">
+              <bpmn:incoming>Flow_L_trace_gate_L_trace_found</bpmn:incoming>
+            </bpmn:endEvent>
+            <bpmn:endEvent id="L_lost_error" name="Declare parcel lost">
+              <bpmn:incoming>Flow_L_trace_gate_L_lost_error</bpmn:incoming>
+              <bpmn:incoming>Flow_L_trace_timeout_L_lost_error</bpmn:incoming>
+              <bpmn:errorEventDefinition errorRef="logistics_shipment_err_PARCEL_LOST" />
+            </bpmn:endEvent>
+            <bpmn:sequenceFlow id="Flow_L_missing_start_L_trace" sourceRef="L_missing_start" targetRef="L_trace" />
+            <bpmn:sequenceFlow id="Flow_L_trace_L_trace_gate" sourceRef="L_trace" targetRef="L_trace_gate" />
+            <bpmn:sequenceFlow id="Flow_L_trace_gate_L_trace_found" sourceRef="L_trace_gate" targetRef="L_trace_found" name="Found">
+              <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= traceOutcome = "found_at_destination"</bpmn:conditionExpression>
+            </bpmn:sequenceFlow>
+            <bpmn:sequenceFlow id="Flow_L_trace_gate_L_lost_error" sourceRef="L_trace_gate" targetRef="L_lost_error" name="Lost" />
+            <bpmn:sequenceFlow id="Flow_L_trace_timeout_L_lost_error" sourceRef="L_trace_timeout" targetRef="L_lost_error" />
+          </bpmn:subProcess>
+          <bpmn:startEvent id="L_move_start" name="Departure scan starts movement clock">
+            <bpmn:outgoing>Flow_L_move_start_L_move</bpmn:outgoing>
+          </bpmn:startEvent>
+          <bpmn:endEvent id="L_move_end" name="Destination scan completes movement">
+            <bpmn:incoming>Flow_L_arrival_L_leg_end</bpmn:incoming>
+            <bpmn:incoming>Flow_L_arrival_wait_L_leg_end</bpmn:incoming>
+          </bpmn:endEvent>
+          <bpmn:sequenceFlow id="Flow_L_move_L_event_gate" sourceRef="L_move" targetRef="L_event_gate" />
+          <bpmn:sequenceFlow id="Flow_L_event_gate_L_arrival" sourceRef="L_event_gate" targetRef="L_arrival" />
+          <bpmn:sequenceFlow id="Flow_L_event_gate_L_delay" sourceRef="L_event_gate" targetRef="L_delay" />
+          <bpmn:sequenceFlow id="Flow_L_event_gate_L_eta" sourceRef="L_event_gate" targetRef="L_eta" />
+          <bpmn:sequenceFlow id="Flow_L_arrival_L_leg_end" sourceRef="L_arrival" targetRef="L_move_end" />
+          <bpmn:sequenceFlow id="Flow_L_delay_L_reroute" sourceRef="L_delay" targetRef="L_reroute" />
+          <bpmn:sequenceFlow id="Flow_L_reroute_L_arrival_wait" sourceRef="L_reroute" targetRef="L_arrival_wait" />
+          <bpmn:sequenceFlow id="Flow_L_arrival_wait_L_leg_end" sourceRef="L_arrival_wait" targetRef="L_move_end" />
+          <bpmn:sequenceFlow id="Flow_L_eta_L_reroute" sourceRef="L_eta" targetRef="L_reroute" />
+          <bpmn:sequenceFlow id="Flow_L_move_start_L_move" sourceRef="L_move_start" targetRef="L_move" />
+        </bpmn:subProcess>
+        <bpmn:sequenceFlow id="Flow_L_movement_L_leg_end" sourceRef="L_movement" targetRef="L_leg_end" />
+      </bpmn:subProcess>
+      <bpmn:parallelGateway id="L_join" name="Movement and notification joined">
+        <bpmn:incoming>Flow_L_legs_L_join</bpmn:incoming>
+        <bpmn:incoming>Flow_L_tracking_merge_L_join</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_join_L_out</bpmn:outgoing>
+      </bpmn:parallelGateway>
+      <bpmn:serviceTask id="L_out" name="Assign last mile delivery agent">
+        <bpmn:incoming>Flow_L_join_L_out</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_out_L_recipient_notice</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sendTask id="L_recipient_notice" name="Notify recipient out for delivery">
+        <bpmn:incoming>Flow_L_delivery_instructions_L_recipient_notice</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_recipient_notice_L_deliver</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:userTask id="L_deliver" name="Handover COD and capture proof of delivery">
+        <bpmn:incoming>Flow_L_recipient_notice_L_deliver</bpmn:incoming>
+        <bpmn:incoming>Flow_L_delivery_wait_L_deliver</bpmn:incoming>
+        <bpmn:incoming>Flow_L_surcharge_gate_L_deliver</bpmn:incoming>
+        <bpmn:incoming>Flow_L_surcharge_accept_L_deliver</bpmn:incoming>
+        <bpmn:incoming>Flow_L_reship_gate_L_deliver</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_deliver_L_delivery_gate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="L_delivery_gate" name="Delivery outcome" default="Flow_L_delivery_gate_L_ship_return">
+        <bpmn:incoming>Flow_L_deliver_L_delivery_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_delivery_gate_L_ship_end</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_delivery_gate_L_delivery_count</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_delivery_gate_L_address_limit</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_delivery_gate_L_delivery_damage</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_delivery_gate_L_ship_return</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="L_delivery_count" name="Count unavailable delivery">
+        <bpmn:incoming>Flow_L_delivery_gate_L_delivery_count</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_delivery_count_L_delivery_limit</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="L_delivery_limit" name="Three attempts reached?" default="Flow_L_delivery_limit_L_delivery_wait">
+        <bpmn:incoming>Flow_L_delivery_count_L_delivery_limit</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_delivery_limit_L_hold_notice</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_delivery_limit_L_delivery_wait</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:intermediateCatchEvent id="L_delivery_wait" name="Reattempt next day">
+        <bpmn:incoming>Flow_L_delivery_limit_L_delivery_wait</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_delivery_wait_L_deliver</bpmn:outgoing>
+        <bpmn:timerEventDefinition>
+          <bpmn:timeDuration>P1D</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:intermediateCatchEvent>
+      <bpmn:sendTask id="L_hold_notice" name="Offer Agreed Depot Pickup or Authorized Collection">
+        <bpmn:incoming>Flow_L_delivery_limit_L_hold_notice</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_hold_notice_L_hold</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:receiveTask id="L_hold" name="Wait for recipient depot collection" messageRef="logistics_shipment_msg_depot_collected">
+        <bpmn:incoming>Flow_L_hold_notice_L_hold</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_hold_L_depot_pod</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:boundaryEvent id="L_hold_timeout" name="Seven day hold expired" attachedToRef="L_hold" cancelActivity="true">
+        <bpmn:outgoing>Flow_L_hold_timeout_L_ship_return</bpmn:outgoing>
+        <bpmn:timerEventDefinition>
+          <bpmn:timeDuration>P7D</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:boundaryEvent>
+      <bpmn:userTask id="L_depot_pod" name="Verify Collector Identity and Capture Delivery Proof">
+        <bpmn:incoming>Flow_L_hold_L_depot_pod</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_depot_pod_L_depot_gate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="L_depot_gate" name="Depot handover successful?" default="Flow_L_depot_gate_L_ship_return">
+        <bpmn:incoming>Flow_L_depot_pod_L_depot_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_depot_gate_L_ship_end</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_depot_gate_L_ship_return</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="L_ship_return" name="Shipment return required">
+        <bpmn:incoming>Flow_L_delivery_gate_L_ship_return</bpmn:incoming>
+        <bpmn:incoming>Flow_L_depot_gate_L_ship_return</bpmn:incoming>
+        <bpmn:incoming>Flow_L_hold_timeout_L_ship_return</bpmn:incoming>
+        <bpmn:incoming>Flow_L_address_limit_L_ship_return</bpmn:incoming>
+        <bpmn:incoming>Flow_L_surcharge_accept_L_ship_return</bpmn:incoming>
+        <bpmn:incoming>Flow_L_address_timeout_L_ship_return</bpmn:incoming>
+        <bpmn:incoming>Flow_L_delivery_refund_L_ship_return</bpmn:incoming>
+        <bpmn:errorEventDefinition errorRef="logistics_shipment_err_RETURN_REQUIRED" />
+      </bpmn:endEvent>
+      <bpmn:sendTask id="L_address_request" name="Contact recipient for corrected address">
+        <bpmn:incoming>Flow_L_address_count_L_address_request</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_address_request_L_address</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:receiveTask id="L_address" name="Wait for address correction" messageRef="logistics_shipment_msg_address_corrected">
+        <bpmn:incoming>Flow_L_address_request_L_address</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_address_L_surcharge_rule</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:boundaryEvent id="L_address_timeout" name="Address correction deadline" attachedToRef="L_address" cancelActivity="true">
+        <bpmn:outgoing>Flow_L_address_timeout_L_ship_return</bpmn:outgoing>
+        <bpmn:timerEventDefinition>
+          <bpmn:timeDuration>P2D</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:boundaryEvent>
+      <bpmn:businessRuleTask id="L_surcharge_rule" name="Determine zone surcharge">
+        <bpmn:incoming>Flow_L_address_L_surcharge_rule</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_surcharge_rule_L_surcharge_gate</bpmn:outgoing>
+      </bpmn:businessRuleTask>
+      <bpmn:exclusiveGateway id="L_surcharge_gate" name="Surcharge needed?" default="Flow_L_surcharge_gate_L_deliver">
+        <bpmn:incoming>Flow_L_surcharge_rule_L_surcharge_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_surcharge_gate_L_surcharge</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_surcharge_gate_L_deliver</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="L_surcharge" name="Confirm and record surcharge">
+        <bpmn:incoming>Flow_L_surcharge_gate_L_surcharge</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_surcharge_L_surcharge_accept</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="L_surcharge_accept" name="Surcharge accepted?" default="Flow_L_surcharge_accept_L_ship_return">
+        <bpmn:incoming>Flow_L_surcharge_L_surcharge_accept</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_surcharge_accept_L_deliver</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_surcharge_accept_L_ship_return</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="L_address_limit" name="Doorstep corrections below two?" default="Flow_L_address_limit_L_ship_return">
+        <bpmn:incoming>Flow_L_delivery_gate_L_address_limit</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_address_limit_L_address_count</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_address_limit_L_ship_return</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="L_address_count" name="Count doorstep address correction">
+        <bpmn:incoming>Flow_L_address_limit_L_address_count</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_address_count_L_address_request</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:userTask id="L_delivery_damage" name="Inspect delivery damage and resolve claim">
+        <bpmn:incoming>Flow_L_delivery_gate_L_delivery_damage</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_delivery_damage_L_delivery_claim_gate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="L_delivery_claim_gate" name="Delivery claim resolution" default="Flow_L_delivery_claim_gate_L_delivery_refund">
+        <bpmn:incoming>Flow_L_delivery_damage_L_delivery_claim_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_delivery_claim_gate_L_delivery_replace</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_delivery_claim_gate_L_delivery_refund</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="L_delivery_replace" name="Execute insured replacement or reshipment">
+        <bpmn:incoming>Flow_L_delivery_claim_gate_L_delivery_replace</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_delivery_replace_L_deliver</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:serviceTask id="L_delivery_refund" name="Record damage refund or uninsured notice">
+        <bpmn:incoming>Flow_L_delivery_claim_gate_L_delivery_refund</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_delivery_refund_L_ship_return</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="L_ship_end" name="Delivery and POD confirmed">
+        <bpmn:incoming>Flow_L_proof_gate_L_ship_end</bpmn:incoming>
+        <bpmn:incoming>Flow_L_recover_proof_L_ship_end</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_L_ship_start_L_parallel" sourceRef="L_ship_start" targetRef="L_dispatch_merge" />
+      <bpmn:sequenceFlow id="Flow_L_parallel_L_legs" sourceRef="L_parallel" targetRef="L_legs" />
+      <bpmn:sequenceFlow id="Flow_L_parallel_L_notify_shipper" sourceRef="L_parallel" targetRef="L_notify_shipper" />
+      <bpmn:sequenceFlow id="Flow_L_legs_L_join" sourceRef="L_legs" targetRef="L_join" />
+      <bpmn:sequenceFlow id="Flow_L_notify_shipper_L_join" sourceRef="L_notify_shipper" targetRef="L_tracking_merge" />
+      <bpmn:sequenceFlow id="Flow_L_track_reconcile_L_join" sourceRef="L_track_reconcile" targetRef="L_tracking_merge" />
+      <bpmn:sequenceFlow id="Flow_L_join_L_out" sourceRef="L_join" targetRef="L_out" />
+      <bpmn:sequenceFlow id="Flow_L_out_L_recipient_notice" sourceRef="L_out" targetRef="L_delivery_instructions" />
+      <bpmn:sequenceFlow id="Flow_L_recipient_notice_L_deliver" sourceRef="L_recipient_notice" targetRef="L_deliver" />
+      <bpmn:sequenceFlow id="Flow_L_deliver_L_delivery_gate" sourceRef="L_deliver" targetRef="L_delivery_gate" />
+      <bpmn:sequenceFlow id="Flow_L_delivery_gate_L_ship_end" sourceRef="L_delivery_gate" targetRef="L_check_proof" name="Delivered">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= deliveryOutcome = "delivered"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_delivery_gate_L_delivery_count" sourceRef="L_delivery_gate" targetRef="L_delivery_count" name="Unavailable">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= deliveryOutcome = "unavailable"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_delivery_gate_L_address_limit" sourceRef="L_delivery_gate" targetRef="L_address_limit" name="Wrong address">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= deliveryOutcome = "wrong_address"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_delivery_gate_L_delivery_damage" sourceRef="L_delivery_gate" targetRef="L_delivery_damage" name="Damaged">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= deliveryOutcome = "damaged"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_delivery_gate_L_ship_return" sourceRef="L_delivery_gate" targetRef="L_ship_return" name="Refusal or COD failure" />
+      <bpmn:sequenceFlow id="Flow_L_delivery_count_L_delivery_limit" sourceRef="L_delivery_count" targetRef="L_delivery_limit" />
+      <bpmn:sequenceFlow id="Flow_L_delivery_limit_L_hold_notice" sourceRef="L_delivery_limit" targetRef="L_hold_notice" name="Three attempts">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= deliveryAttempts &gt;= 3</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_delivery_limit_L_delivery_wait" sourceRef="L_delivery_limit" targetRef="L_delivery_wait" name="Retry" />
+      <bpmn:sequenceFlow id="Flow_L_delivery_wait_L_deliver" sourceRef="L_delivery_wait" targetRef="L_deliver" />
+      <bpmn:sequenceFlow id="Flow_L_hold_notice_L_hold" sourceRef="L_hold_notice" targetRef="L_hold" />
+      <bpmn:sequenceFlow id="Flow_L_hold_L_depot_pod" sourceRef="L_hold" targetRef="L_depot_pod" />
+      <bpmn:sequenceFlow id="Flow_L_depot_pod_L_depot_gate" sourceRef="L_depot_pod" targetRef="L_depot_gate" />
+      <bpmn:sequenceFlow id="Flow_L_depot_gate_L_ship_end" sourceRef="L_depot_gate" targetRef="L_check_proof" name="Collected">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= depotOutcome = "collected"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_depot_gate_L_ship_return" sourceRef="L_depot_gate" targetRef="L_ship_return" name="Refusal or COD failure" />
+      <bpmn:sequenceFlow id="Flow_L_hold_timeout_L_ship_return" sourceRef="L_hold_timeout" targetRef="L_ship_return" />
+      <bpmn:sequenceFlow id="Flow_L_address_limit_L_address_count" sourceRef="L_address_limit" targetRef="L_address_count" name="Correct">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= addressCorrections &lt; 2</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_address_limit_L_ship_return" sourceRef="L_address_limit" targetRef="L_ship_return" name="Exhausted" />
+      <bpmn:sequenceFlow id="Flow_L_address_count_L_address_request" sourceRef="L_address_count" targetRef="L_address_request" />
+      <bpmn:sequenceFlow id="Flow_L_address_request_L_address" sourceRef="L_address_request" targetRef="L_address" />
+      <bpmn:sequenceFlow id="Flow_L_address_L_surcharge_rule" sourceRef="L_address" targetRef="L_surcharge_rule" />
+      <bpmn:sequenceFlow id="Flow_L_surcharge_rule_L_surcharge_gate" sourceRef="L_surcharge_rule" targetRef="L_surcharge_gate" />
+      <bpmn:sequenceFlow id="Flow_L_surcharge_gate_L_surcharge" sourceRef="L_surcharge_gate" targetRef="L_surcharge" name="New zone">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= surcharge &gt; 0</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_surcharge_gate_L_deliver" sourceRef="L_surcharge_gate" targetRef="L_deliver" name="No surcharge" />
+      <bpmn:sequenceFlow id="Flow_L_surcharge_L_surcharge_accept" sourceRef="L_surcharge" targetRef="L_surcharge_accept" />
+      <bpmn:sequenceFlow id="Flow_L_surcharge_accept_L_deliver" sourceRef="L_surcharge_accept" targetRef="L_deliver" name="Accepted">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= surchargeAccepted = "yes"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_surcharge_accept_L_ship_return" sourceRef="L_surcharge_accept" targetRef="L_ship_return" name="Declined" />
+      <bpmn:sequenceFlow id="Flow_L_address_timeout_L_ship_return" sourceRef="L_address_timeout" targetRef="L_ship_return" />
+      <bpmn:sequenceFlow id="Flow_L_delivery_damage_L_delivery_claim_gate" sourceRef="L_delivery_damage" targetRef="L_delivery_claim_gate" />
+      <bpmn:sequenceFlow id="Flow_L_delivery_claim_gate_L_delivery_replace" sourceRef="L_delivery_claim_gate" targetRef="L_delivery_replace" name="Insured replacement">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= insured = true and replacementCount &lt; 1 and (deliveryClaim = "replace" or deliveryClaim = "reship")</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_delivery_claim_gate_L_delivery_refund" sourceRef="L_delivery_claim_gate" targetRef="L_delivery_refund" name="Refund or uninsured" />
+      <bpmn:sequenceFlow id="Flow_L_delivery_replace_L_deliver" sourceRef="L_delivery_replace" targetRef="L_reship_gate" />
+      <bpmn:sequenceFlow id="Flow_L_delivery_refund_L_ship_return" sourceRef="L_delivery_refund" targetRef="L_ship_return" />
+      <bpmn:exclusiveGateway id="L_reship_gate" name="Replace locally or reship?" default="Flow_L_reship_gate_L_deliver">
+        <bpmn:incoming>Flow_L_delivery_replace_L_deliver</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_reship_gate_L_parallel</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_reship_gate_L_deliver</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:sequenceFlow id="Flow_L_reship_gate_L_parallel" sourceRef="L_reship_gate" targetRef="L_dispatch_merge" name="Reship">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= deliveryClaim = "reship"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_reship_gate_L_deliver" sourceRef="L_reship_gate" targetRef="L_deliver" name="Local replacement" />
+      <bpmn:exclusiveGateway id="L_tracking_merge" name="Tracking success or recovery merge">
+        <bpmn:incoming>Flow_L_notify_shipper_L_join</bpmn:incoming>
+        <bpmn:incoming>Flow_L_track_reconcile_L_join</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_tracking_merge_L_join</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="L_dispatch_merge" name="Initial dispatch or reshipment merge">
+        <bpmn:incoming>Flow_L_ship_start_L_parallel</bpmn:incoming>
+        <bpmn:incoming>Flow_L_reship_gate_L_parallel</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_dispatch_merge_L_parallel</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:sequenceFlow id="Flow_L_tracking_merge_L_join" sourceRef="L_tracking_merge" targetRef="L_join" />
+      <bpmn:sequenceFlow id="Flow_L_dispatch_merge_L_parallel" sourceRef="L_dispatch_merge" targetRef="L_parallel" />
+      <bpmn:userTask id="L_delivery_instructions" name="Confirm Delivery Instructions">
+        <bpmn:incoming>Flow_L_out_L_recipient_notice</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_delivery_instructions_L_recipient_notice</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:sequenceFlow id="Flow_L_delivery_instructions_L_recipient_notice" sourceRef="L_delivery_instructions" targetRef="L_recipient_notice" />
+      <bpmn:userTask id="L_check_proof" name="Check Delivery Evidence">
+        <bpmn:incoming>Flow_L_delivery_gate_L_ship_end</bpmn:incoming>
+        <bpmn:incoming>Flow_L_depot_gate_L_ship_end</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_check_proof_L_proof_gate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="L_proof_gate" name="Delivery Evidence Complete?" default="Flow_L_proof_gate_L_recover_proof">
+        <bpmn:incoming>Flow_L_check_proof_L_proof_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_proof_gate_L_ship_end</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_proof_gate_L_recover_proof</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="L_recover_proof" name="Recover Proof or Verify Receipt">
+        <bpmn:documentation>Complete this task only after a signed proof is recovered or receipt is confirmed with the recipient and recorded. If confirmation is unavailable, keep the case open for investigation; do not complete the task or declare delivery merely because an attempt occurred.</bpmn:documentation>
+        <bpmn:incoming>Flow_L_proof_gate_L_recover_proof</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_recover_proof_L_ship_end</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:sequenceFlow id="Flow_L_check_proof_L_proof_gate" sourceRef="L_check_proof" targetRef="L_proof_gate" />
+      <bpmn:sequenceFlow id="Flow_L_proof_gate_L_ship_end" sourceRef="L_proof_gate" targetRef="L_ship_end" name="Complete">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= deliveryEvidenceComplete = true</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_proof_gate_L_recover_proof" sourceRef="L_proof_gate" targetRef="L_recover_proof" name="Missing or unclear" />
+      <bpmn:sequenceFlow id="Flow_L_recover_proof_L_ship_end" sourceRef="L_recover_proof" targetRef="L_ship_end" name="Receipt verified" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="L_cancel_message" name="Cancel after dispatch" attachedToRef="L_shipment" cancelActivity="true">
+      <bpmn:outgoing>Flow_L_cancel_message_L_stop</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="logistics_shipment_msg_cancel" />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="L_stop" name="Stop movement and intercept parcel">
+      <bpmn:incoming>Flow_L_cancel_message_L_stop</bpmn:incoming>
+      <bpmn:outgoing>Flow_L_stop_L_compensate</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:intermediateThrowEvent id="L_compensate" name="Compensate charge minus fee">
+      <bpmn:incoming>Flow_L_stop_L_compensate</bpmn:incoming>
+      <bpmn:outgoing>Flow_L_compensate_L_return</bpmn:outgoing>
+      <bpmn:compensateEventDefinition activityRef="L_charge" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:serviceTask id="L_return" name="Return parcel to sender adjust charges notify">
+      <bpmn:incoming>Flow_L_compensate_L_return</bpmn:incoming>
+      <bpmn:incoming>Flow_L_return_catch_L_return</bpmn:incoming>
+      <bpmn:outgoing>Flow_L_return_L_returned</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="L_returned" name="Returned to sender">
+      <bpmn:incoming>Flow_L_return_L_returned</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_L_cancel_message_L_stop" sourceRef="L_cancel_message" targetRef="L_stop" />
+    <bpmn:sequenceFlow id="Flow_L_stop_L_compensate" sourceRef="L_stop" targetRef="L_compensate" />
+    <bpmn:sequenceFlow id="Flow_L_compensate_L_return" sourceRef="L_compensate" targetRef="L_return" />
+    <bpmn:sequenceFlow id="Flow_L_return_L_returned" sourceRef="L_return" targetRef="L_returned" />
+    <bpmn:boundaryEvent id="L_return_catch" name="Return outcome from transit or delivery" attachedToRef="L_shipment" cancelActivity="true">
+      <bpmn:outgoing>Flow_L_return_catch_L_return</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="logistics_shipment_err_RETURN_REQUIRED" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_L_return_catch_L_return" sourceRef="L_return_catch" targetRef="L_return" />
+    <bpmn:boundaryEvent id="L_lost_catch" name="Parcel lost after tracing" attachedToRef="L_shipment" cancelActivity="true">
+      <bpmn:outgoing>Flow_L_lost_catch_L_compensation</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="logistics_shipment_err_PARCEL_LOST" />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="L_compensation" name="Pay loss compensation and notify customer">
+      <bpmn:incoming>Flow_L_lost_catch_L_compensation</bpmn:incoming>
+      <bpmn:outgoing>Flow_L_compensation_L_lost</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="L_lost" name="Shipment closed as lost">
+      <bpmn:incoming>Flow_L_compensation_L_lost</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_L_lost_catch_L_compensation" sourceRef="L_lost_catch" targetRef="L_compensation" />
+    <bpmn:sequenceFlow id="Flow_L_compensation_L_lost" sourceRef="L_compensation" targetRef="L_lost" />
+    <bpmn:serviceTask id="L_close" name="Close Shipment and Invoice">
+      <bpmn:incoming>Flow_L_shipment_L_close</bpmn:incoming>
+      <bpmn:outgoing>Flow_L_close_L_delivered</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="L_delivered" name="Shipment delivered and closed">
+      <bpmn:incoming>Flow_L_close_L_delivered</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_L_shipment_L_close" sourceRef="L_shipment" targetRef="L_close" />
+    <bpmn:sequenceFlow id="Flow_L_close_L_delivered" sourceRef="L_close" targetRef="L_delivered" />
+    <bpmn:sequenceFlow id="Flow_L_start_L_init" sourceRef="L_start" targetRef="L_init" />
+    <bpmn:sequenceFlow id="Flow_L_init_L_booking" sourceRef="L_init" targetRef="L_booking_stage" />
+    <bpmn:sequenceFlow id="Flow_L_pickup_L_charge" sourceRef="L_pickup" targetRef="L_charge" />
+    <bpmn:sequenceFlow id="Flow_L_charge_L_shipment" sourceRef="L_charge" targetRef="L_shipment" />
+    <bpmn:subProcess id="L_booking_stage" name="Book and Check Shipment">
+      <bpmn:incoming>Flow_L_init_L_booking</bpmn:incoming>
+      <bpmn:outgoing>Flow_L_booking_stage_L_pickup</bpmn:outgoing>
+      <bpmn:laneSet id="L_booking_stage_lanes">
+        <bpmn:lane id="L_booking_stage_lane_0" name="Control Tower / Dispatcher">
+          <bpmn:flowNodeRef>L_schedule</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_correct_limit</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_valid</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_correction</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_rule</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="L_booking_stage_lane_1" name="Shipper / Customer">
+          <bpmn:flowNodeRef>L_booking</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_booking_stage_exit_L_cancel_charge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_booking_stage_exit_L_pickup</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>L_booking_stage_start</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+      <bpmn:serviceTask id="L_schedule" name="Schedule pickup and assign driver">
+        <bpmn:incoming>Flow_L_valid_L_schedule</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_schedule_L_pickup</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:userTask id="L_booking" name="Create or correct booking">
+        <bpmn:incoming>Flow_L_correction_L_booking</bpmn:incoming>
+        <bpmn:incoming>Flow_L_booking_stage_start_L_booking</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_booking_L_rule</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="L_correct_limit" name="Correction attempts below three?" default="Flow_L_correct_limit_L_cancel_charge">
+        <bpmn:incoming>Flow_L_valid_L_correct_limit</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_correct_limit_L_correction</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_correct_limit_L_cancel_charge</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="L_valid" name="Valid booking?" default="Flow_L_valid_L_correct_limit">
+        <bpmn:incoming>Flow_L_rule_L_valid</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_valid_L_schedule</bpmn:outgoing>
+        <bpmn:outgoing>Flow_L_valid_L_correct_limit</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:sendTask id="L_correction" name="Request booking correction">
+        <bpmn:incoming>Flow_L_correct_limit_L_correction</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_correction_L_booking</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:businessRuleTask id="L_rule" name="Validate address weight service and calculate charge">
+        <bpmn:incoming>Flow_L_booking_L_rule</bpmn:incoming>
+        <bpmn:outgoing>Flow_L_rule_L_valid</bpmn:outgoing>
+      </bpmn:businessRuleTask>
+      <bpmn:sequenceFlow id="Flow_L_booking_L_rule" sourceRef="L_booking" targetRef="L_rule" />
+      <bpmn:sequenceFlow id="Flow_L_rule_L_valid" sourceRef="L_rule" targetRef="L_valid" />
+      <bpmn:sequenceFlow id="Flow_L_valid_L_schedule" sourceRef="L_valid" targetRef="L_schedule" name="Valid">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= bookingValid = true</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_valid_L_correct_limit" sourceRef="L_valid" targetRef="L_correct_limit" name="Invalid" />
+      <bpmn:sequenceFlow id="Flow_L_correct_limit_L_correction" sourceRef="L_correct_limit" targetRef="L_correction" name="Correct">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= bookingAttempts &lt; 3</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_L_correct_limit_L_cancel_charge" sourceRef="L_correct_limit" targetRef="L_booking_stage_exit_L_cancel_charge" name="Exhausted" />
+      <bpmn:endEvent id="L_booking_stage_exit_L_cancel_charge" name="Charge cancellation fee and notify">
+        <bpmn:incoming>Flow_L_correct_limit_L_cancel_charge</bpmn:incoming>
+        <bpmn:errorEventDefinition errorRef="logistics_shipment_err_EXIT_L_cancel_charge" />
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_L_correction_L_booking" sourceRef="L_correction" targetRef="L_booking" />
+      <bpmn:sequenceFlow id="Flow_L_schedule_L_pickup" sourceRef="L_schedule" targetRef="L_booking_stage_exit_L_pickup" />
+      <bpmn:endEvent id="L_booking_stage_exit_L_pickup" name="Approved">
+        <bpmn:incoming>Flow_L_schedule_L_pickup</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:startEvent id="L_booking_stage_start" name="Start">
+        <bpmn:outgoing>Flow_L_booking_stage_start_L_booking</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:sequenceFlow id="Flow_L_booking_stage_start_L_booking" sourceRef="L_booking_stage_start" targetRef="L_booking" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="L_booking_stage_catch_L_cancel_charge" name="Charge cancellation fee and notify" attachedToRef="L_booking_stage" cancelActivity="true">
+      <bpmn:outgoing>Flow_L_booking_stage_catch_L_cancel_charge_L_cancel_charge</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="logistics_shipment_err_EXIT_L_cancel_charge" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_L_booking_stage_catch_L_cancel_charge_L_cancel_charge" sourceRef="L_booking_stage_catch_L_cancel_charge" targetRef="L_cancel_charge" />
+    <bpmn:sequenceFlow id="Flow_L_booking_stage_L_pickup" sourceRef="L_booking_stage" targetRef="L_pickup" />
+    <bpmn:association id="Assoc_L_charge" sourceRef="L_charge_comp" targetRef="L_refund" associationDirection="One" />
+  </bpmn:process>
+  <bpmn:collaboration id="logistics_shipment_collab">
+    <bpmn:participant id="logistics_shipment_pool" name="Assignment 2 - Logistics and Shipment Exception Management" processRef="logistics_shipment" />
+  </bpmn:collaboration>
+  <bpmn:error id="logistics_shipment_err_CANCEL_BOOKING" name="CANCEL_BOOKING" errorCode="CANCEL_BOOKING" />
+  <bpmn:error id="logistics_shipment_err_PICKUP_FAILURE" name="PICKUP_FAILURE" errorCode="PICKUP_FAILURE" />
+  <bpmn:error id="logistics_shipment_err_SCAN_FAILURE" name="SCAN_FAILURE" errorCode="SCAN_FAILURE" />
+  <bpmn:message id="logistics_shipment_msg_customs_documents" name="logistics_shipment.customs_documents">
+    </bpmn:message>
+  <bpmn:error id="logistics_shipment_err_RETURN_REQUIRED" name="RETURN_REQUIRED" errorCode="RETURN_REQUIRED" />
+  <bpmn:message id="logistics_shipment_msg_leg_arrived" name="logistics_shipment.leg_arrived">
+    </bpmn:message>
+  <bpmn:message id="logistics_shipment_msg_transit_delay" name="logistics_shipment.transit_delay">
+    </bpmn:message>
+  <bpmn:error id="logistics_shipment_err_PARCEL_LOST" name="PARCEL_LOST" errorCode="PARCEL_LOST" />
+  <bpmn:message id="logistics_shipment_msg_depot_collected" name="logistics_shipment.depot_collected">
+    </bpmn:message>
+  <bpmn:message id="logistics_shipment_msg_address_corrected" name="logistics_shipment.address_corrected">
+    </bpmn:message>
+  <bpmn:message id="logistics_shipment_msg_cancel" name="logistics_shipment.cancel">
+    </bpmn:message>
+  <bpmn:error id="logistics_shipment_err_EXIT_L_cancel_charge" name="EXIT_L_cancel_charge" errorCode="EXIT_L_cancel_charge" />
+  <bpmndi:BPMNDiagram id="Diagram_logistics_shipment">
+    <bpmndi:BPMNPlane id="Plane_logistics_shipment" bpmnElement="logistics_shipment_collab">
+      <bpmndi:BPMNShape id="Shape_logistics_shipment_pool" bpmnElement="logistics_shipment_pool" isHorizontal="true">
+        <dc:Bounds x="20" y="50" width="3430.0" height="3280" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_logistics_shipment_lane_0" bpmnElement="logistics_shipment_lane_0" isHorizontal="true">
+        <dc:Bounds x="50" y="50" width="3400.0" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_logistics_shipment_lane_1" bpmnElement="logistics_shipment_lane_1" isHorizontal="true">
+        <dc:Bounds x="50" y="550" width="3400.0" height="1460" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_logistics_shipment_lane_2" bpmnElement="logistics_shipment_lane_2" isHorizontal="true">
+        <dc:Bounds x="50" y="2010" width="3400.0" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_logistics_shipment_lane_3" bpmnElement="logistics_shipment_lane_3" isHorizontal="true">
+        <dc:Bounds x="50" y="2510" width="3400.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_start" bpmnElement="L_start">
+        <dc:Bounds x="210.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_init" bpmnElement="L_init">
+        <dc:Bounds x="570.0" y="640.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_pickup" bpmnElement="L_pickup" isExpanded="false">
+        <dc:Bounds x="1450.0" y="2100.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_pick_cancel_catch" bpmnElement="L_pick_cancel_catch">
+        <dc:Bounds x="1468.0" y="2170.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1408.0" y="2218.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_cancel_charge" bpmnElement="L_cancel_charge">
+        <dc:Bounds x="1890.0" y="960.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_cancelled" bpmnElement="L_cancelled">
+        <dc:Bounds x="2410.0" y="985.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2350.0" y="1033.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_charge" bpmnElement="L_charge">
+        <dc:Bounds x="1890.0" y="640.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_charge_comp" bpmnElement="L_charge_comp">
+        <dc:Bounds x="1908.0" y="710.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1848.0" y="758.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_refund" bpmnElement="L_refund">
+        <dc:Bounds x="1890.0" y="1280.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_shipment" bpmnElement="L_shipment" isExpanded="false">
+        <dc:Bounds x="2330.0" y="640.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_cancel_message" bpmnElement="L_cancel_message">
+        <dc:Bounds x="2348.0" y="710.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2288.0" y="758.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_stop" bpmnElement="L_stop">
+        <dc:Bounds x="2770.0" y="1280.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_compensate" bpmnElement="L_compensate">
+        <dc:Bounds x="3290.0" y="1305.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3230.0" y="1353.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_return" bpmnElement="L_return">
+        <dc:Bounds x="2770.0" y="960.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_returned" bpmnElement="L_returned">
+        <dc:Bounds x="3290.0" y="985.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3230.0" y="1033.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_return_catch" bpmnElement="L_return_catch">
+        <dc:Bounds x="2460.0" y="710.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2400.0" y="842.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_lost_catch" bpmnElement="L_lost_catch">
+        <dc:Bounds x="2404.0" y="710.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2344.0" y="800.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_compensation" bpmnElement="L_compensation">
+        <dc:Bounds x="2770.0" y="2920.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_lost" bpmnElement="L_lost">
+        <dc:Bounds x="3290.0" y="1625.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3230.0" y="1673.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_close" bpmnElement="L_close">
+        <dc:Bounds x="2770.0" y="640.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_delivered" bpmnElement="L_delivered">
+        <dc:Bounds x="3290.0" y="665.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3230.0" y="713.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_booking_stage" bpmnElement="L_booking_stage" isExpanded="false">
+        <dc:Bounds x="1010.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_booking_stage_catch_L_cancel_charge" bpmnElement="L_booking_stage_catch_L_cancel_charge">
+        <dc:Bounds x="1028.0" y="210.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="968.0" y="258.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_pick_cancel_catch_L_cancel_charge" bpmnElement="Flow_L_pick_cancel_catch_L_cancel_charge">
+        <di:waypoint x="1488.0" y="2210.0" />
+        <di:waypoint x="1488.0" y="2274.0" />
+        <di:waypoint x="1820.0" y="2274.0" />
+        <di:waypoint x="1820.0" y="1114.0" />
+        <di:waypoint x="1990.0" y="1114.0" />
+        <di:waypoint x="1990.0" y="1050.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_cancel_charge_L_cancelled" bpmnElement="Flow_L_cancel_charge_L_cancelled">
+        <di:waypoint x="2090.0" y="1005.0" />
+        <di:waypoint x="2410.0" y="1005.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_cancel_message_L_stop" bpmnElement="Flow_L_cancel_message_L_stop">
+        <di:waypoint x="2368.0" y="750.0" />
+        <di:waypoint x="2368.0" y="1325.0" />
+        <di:waypoint x="2770.0" y="1325.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_stop_L_compensate" bpmnElement="Flow_L_stop_L_compensate">
+        <di:waypoint x="2970.0" y="1325.0" />
+        <di:waypoint x="3290.0" y="1325.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_compensate_L_return" bpmnElement="Flow_L_compensate_L_return">
+        <di:waypoint x="3310.0" y="1305.0" />
+        <di:waypoint x="3310.0" y="1114.0" />
+        <di:waypoint x="2870.0" y="1114.0" />
+        <di:waypoint x="2870.0" y="1050.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_return_L_returned" bpmnElement="Flow_L_return_L_returned">
+        <di:waypoint x="2970.0" y="1005.0" />
+        <di:waypoint x="3290.0" y="1005.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_return_catch_L_return" bpmnElement="Flow_L_return_catch_L_return">
+        <di:waypoint x="2480.0" y="750.0" />
+        <di:waypoint x="2480.0" y="1005.0" />
+        <di:waypoint x="2770.0" y="1005.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_lost_catch_L_compensation" bpmnElement="Flow_L_lost_catch_L_compensation">
+        <di:waypoint x="2424.0" y="750.0" />
+        <di:waypoint x="2424.0" y="814.0" />
+        <di:waypoint x="2324.0" y="814.0" />
+        <di:waypoint x="2324.0" y="2965.0" />
+        <di:waypoint x="2770.0" y="2965.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_compensation_L_lost" bpmnElement="Flow_L_compensation_L_lost">
+        <di:waypoint x="2970.0" y="2965.0" />
+        <di:waypoint x="3034.0" y="2965.0" />
+        <di:waypoint x="3034.0" y="1729.0" />
+        <di:waypoint x="3310.0" y="1729.0" />
+        <di:waypoint x="3310.0" y="1665.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_shipment_L_close" bpmnElement="Flow_L_shipment_L_close">
+        <di:waypoint x="2530.0" y="685.0" />
+        <di:waypoint x="2770.0" y="685.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_close_L_delivered" bpmnElement="Flow_L_close_L_delivered">
+        <di:waypoint x="2970.0" y="685.0" />
+        <di:waypoint x="3290.0" y="685.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_start_L_init" bpmnElement="Flow_L_start_L_init">
+        <di:waypoint x="250.0" y="185.0" />
+        <di:waypoint x="314.0" y="185.0" />
+        <di:waypoint x="314.0" y="685.0" />
+        <di:waypoint x="570.0" y="685.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_init_L_booking" bpmnElement="Flow_L_init_L_booking">
+        <di:waypoint x="770.0" y="685.0" />
+        <di:waypoint x="834.0" y="685.0" />
+        <di:waypoint x="834.0" y="185.0" />
+        <di:waypoint x="1010.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_pickup_L_charge" bpmnElement="Flow_L_pickup_L_charge">
+        <di:waypoint x="1650.0" y="2145.0" />
+        <di:waypoint x="1714.0" y="2145.0" />
+        <di:waypoint x="1714.0" y="685.0" />
+        <di:waypoint x="1890.0" y="685.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_charge_L_shipment" bpmnElement="Flow_L_charge_L_shipment">
+        <di:waypoint x="2090.0" y="685.0" />
+        <di:waypoint x="2330.0" y="685.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_booking_stage_catch_L_cancel_charge_L_cancel_charge" bpmnElement="Flow_L_booking_stage_catch_L_cancel_charge_L_cancel_charge">
+        <di:waypoint x="1048.0" y="250.0" />
+        <di:waypoint x="1048.0" y="1005.0" />
+        <di:waypoint x="1890.0" y="1005.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_booking_stage_L_pickup" bpmnElement="Flow_L_booking_stage_L_pickup">
+        <di:waypoint x="1210.0" y="185.0" />
+        <di:waypoint x="1274.0" y="185.0" />
+        <di:waypoint x="1274.0" y="2145.0" />
+        <di:waypoint x="1450.0" y="2145.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_L_charge" bpmnElement="Assoc_L_charge">
+        <di:waypoint x="1928.0" y="750.0" />
+        <di:waypoint x="1928.0" y="814.0" />
+        <di:waypoint x="1864.0" y="814.0" />
+        <di:waypoint x="1864.0" y="1216.0" />
+        <di:waypoint x="1990.0" y="1216.0" />
+        <di:waypoint x="1990.0" y="1280.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_L_pickup">
+    <bpmndi:BPMNPlane id="Plane_L_pickup" bpmnElement="L_pickup">
+      <bpmndi:BPMNShape id="Shape_L_pickup_lane_0" bpmnElement="L_pickup_lane_0" isHorizontal="true">
+        <dc:Bounds x="50" y="50" width="3847.0" height="1140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_pickup_lane_1" bpmnElement="L_pickup_lane_1" isHorizontal="true">
+        <dc:Bounds x="50" y="1190" width="3847.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_pick_start" bpmnElement="L_pick_start">
+        <dc:Bounds x="210.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_collect" bpmnElement="L_collect">
+        <dc:Bounds x="570.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_pick_gate" bpmnElement="L_pick_gate">
+        <dc:Bounds x="1523.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1463.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_pick_count" bpmnElement="L_pick_count">
+        <dc:Bounds x="1890.0" y="1600.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_pick_limit" bpmnElement="L_pick_limit">
+        <dc:Bounds x="2403.0" y="1618.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2343.0" y="1680.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_reschedule" bpmnElement="L_reschedule">
+        <dc:Bounds x="2770.0" y="1600.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_pick_wait" bpmnElement="L_pick_wait">
+        <dc:Bounds x="3290.0" y="1625.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3230.0" y="1673.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_pick_cancel" bpmnElement="L_pick_cancel">
+        <dc:Bounds x="2850.0" y="805.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2790.0" y="853.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_pick_end" bpmnElement="L_pick_end">
+        <dc:Bounds x="2850.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2790.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_pick_exception" bpmnElement="L_pick_exception">
+        <dc:Bounds x="1028.0" y="210.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="968.0" y="258.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_pick_capture" bpmnElement="L_pick_capture">
+        <dc:Bounds x="1010.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_packaging" bpmnElement="L_packaging">
+        <dc:Bounds x="1890.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_pick_start_L_collect" bpmnElement="Flow_L_pick_start_L_collect">
+        <di:waypoint x="250.0" y="185.0" />
+        <di:waypoint x="570.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_collect_L_pick_gate" bpmnElement="Flow_L_collect_L_pick_gate">
+        <di:waypoint x="770.0" y="185.0" />
+        <di:waypoint x="1010.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_pick_gate_L_pick_end" bpmnElement="Flow_L_pick_gate_L_pick_end">
+        <di:waypoint x="1577.0" y="185.0" />
+        <di:waypoint x="1890.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1646.0" y="143.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_pick_gate_L_pick_count" bpmnElement="Flow_L_pick_gate_L_pick_count">
+        <di:waypoint x="1550.0" y="212.0" />
+        <di:waypoint x="1550.0" y="1536.0" />
+        <di:waypoint x="1990.0" y="1536.0" />
+        <di:waypoint x="1990.0" y="1600.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1564.0" y="303.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_pick_count_L_pick_limit" bpmnElement="Flow_L_pick_count_L_pick_limit">
+        <di:waypoint x="2090.0" y="1645.0" />
+        <di:waypoint x="2403.0" y="1645.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_pick_limit_L_pick_cancel" bpmnElement="Flow_L_pick_limit_L_pick_cancel">
+        <di:waypoint x="2430.0" y="1618.0" />
+        <di:waypoint x="2430.0" y="909.0" />
+        <di:waypoint x="2870.0" y="909.0" />
+        <di:waypoint x="2870.0" y="845.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2444.0" y="1499.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_pick_limit_L_reschedule" bpmnElement="Flow_L_pick_limit_L_reschedule">
+        <di:waypoint x="2457.0" y="1645.0" />
+        <di:waypoint x="2770.0" y="1645.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2526.0" y="1603.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_reschedule_L_pick_wait" bpmnElement="Flow_L_reschedule_L_pick_wait">
+        <di:waypoint x="2970.0" y="1645.0" />
+        <di:waypoint x="3290.0" y="1645.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_pick_wait_L_collect" bpmnElement="Flow_L_pick_wait_L_collect">
+        <di:waypoint x="3310.0" y="1625.0" />
+        <di:waypoint x="3310.0" y="1561.0" />
+        <di:waypoint x="3356.0" y="1561.0" />
+        <di:waypoint x="3356.0" y="1716.0" />
+        <di:waypoint x="670.0" y="1716.0" />
+        <di:waypoint x="670.0" y="230.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_pick_exception_L_pick_count" bpmnElement="Flow_L_pick_exception_L_pick_count">
+        <di:waypoint x="1048.0" y="250.0" />
+        <di:waypoint x="1048.0" y="1645.0" />
+        <di:waypoint x="1890.0" y="1645.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_pick_capture_L_pick_gate" bpmnElement="Flow_L_pick_capture_L_pick_gate">
+        <di:waypoint x="1210.0" y="185.0" />
+        <di:waypoint x="1523.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_packaging_L_pick_end" bpmnElement="Flow_L_packaging_L_pick_end">
+        <di:waypoint x="2090.0" y="185.0" />
+        <di:waypoint x="2403.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Shape_L_packing_gate" bpmnElement="L_packing_gate">
+        <dc:Bounds x="2403.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2343.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_repack" bpmnElement="L_repack">
+        <dc:Bounds x="2770.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_recheck_packing" bpmnElement="L_recheck_packing">
+        <dc:Bounds x="3210.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_repacked_gate" bpmnElement="L_repacked_gate">
+        <dc:Bounds x="3723.0" y="478.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3663.0" y="540.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_packing_gate_L_pick_end" bpmnElement="Flow_L_packing_gate_L_pick_end">
+        <di:waypoint x="2457.0" y="185.0" />
+        <di:waypoint x="2850.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2526.0" y="143.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_packing_gate_L_repack" bpmnElement="Flow_L_packing_gate_L_repack">
+        <di:waypoint x="2430.0" y="212.0" />
+        <di:waypoint x="2430.0" y="505.0" />
+        <di:waypoint x="2770.0" y="505.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2444.0" y="303.0" width="91.2" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_repack_L_recheck_packing" bpmnElement="Flow_L_repack_L_recheck_packing">
+        <di:waypoint x="2970.0" y="505.0" />
+        <di:waypoint x="3210.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_recheck_packing_L_repacked_gate" bpmnElement="Flow_L_recheck_packing_L_repacked_gate">
+        <di:waypoint x="3410.0" y="505.0" />
+        <di:waypoint x="3723.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_repacked_gate_L_pick_end" bpmnElement="Flow_L_repacked_gate_L_pick_end">
+        <di:waypoint x="3750.0" y="478.0" />
+        <di:waypoint x="3750.0" y="185.0" />
+        <di:waypoint x="2890.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3764.0" y="352.0" width="114.0" height="42" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_repacked_gate_L_pick_cancel" bpmnElement="Flow_L_repacked_gate_L_pick_cancel">
+        <di:waypoint x="3750.0" y="532.0" />
+        <di:waypoint x="3750.0" y="825.0" />
+        <di:waypoint x="2890.0" y="825.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3764.0" y="623.0" width="96.9" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_L_shipment">
+    <bpmndi:BPMNPlane id="Plane_L_shipment" bpmnElement="L_shipment">
+      <bpmndi:BPMNShape id="Shape_L_shipment_lane_0" bpmnElement="L_shipment_lane_0" isHorizontal="true">
+        <dc:Bounds x="50" y="50" width="7807.0" height="1460" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_shipment_lane_1" bpmnElement="L_shipment_lane_1" isHorizontal="true">
+        <dc:Bounds x="50" y="1510" width="7807.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_shipment_lane_2" bpmnElement="L_shipment_lane_2" isHorizontal="true">
+        <dc:Bounds x="50" y="2330" width="7807.0" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_shipment_lane_3" bpmnElement="L_shipment_lane_3" isHorizontal="true">
+        <dc:Bounds x="50" y="2830" width="7807.0" height="1140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_shipment_lane_4" bpmnElement="L_shipment_lane_4" isHorizontal="true">
+        <dc:Bounds x="50" y="3970" width="7807.0" height="1140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_shipment_lane_5" bpmnElement="L_shipment_lane_5" isHorizontal="true">
+        <dc:Bounds x="50" y="5110" width="7807.0" height="1140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_ship_start" bpmnElement="L_ship_start">
+        <dc:Bounds x="210.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_parallel" bpmnElement="L_parallel">
+        <dc:Bounds x="1083.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1023.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_notify_shipper" bpmnElement="L_notify_shipper">
+        <dc:Bounds x="1450.0" y="1920.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_track_fail" bpmnElement="L_track_fail">
+        <dc:Bounds x="1890.0" y="780.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_track_reconcile" bpmnElement="L_track_reconcile">
+        <dc:Bounds x="1890.0" y="1100.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_track_error" bpmnElement="L_track_error">
+        <dc:Bounds x="1468.0" y="1990.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1408.0" y="2038.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_legs" bpmnElement="L_legs" isExpanded="false">
+        <dc:Bounds x="1450.0" y="2420.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_join" bpmnElement="L_join">
+        <dc:Bounds x="1963.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1903.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_out" bpmnElement="L_out">
+        <dc:Bounds x="2330.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_recipient_notice" bpmnElement="L_recipient_notice">
+        <dc:Bounds x="3210.0" y="2920.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_deliver" bpmnElement="L_deliver">
+        <dc:Bounds x="3650.0" y="4060.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_delivery_gate" bpmnElement="L_delivery_gate">
+        <dc:Bounds x="4163.0" y="4078.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4103.0" y="4140.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_delivery_count" bpmnElement="L_delivery_count">
+        <dc:Bounds x="4530.0" y="780.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_delivery_limit" bpmnElement="L_delivery_limit">
+        <dc:Bounds x="5043.0" y="798.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4983.0" y="860.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_delivery_wait" bpmnElement="L_delivery_wait">
+        <dc:Bounds x="5490.0" y="805.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5430.0" y="853.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_hold_notice" bpmnElement="L_hold_notice">
+        <dc:Bounds x="5410.0" y="3560.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_hold" bpmnElement="L_hold">
+        <dc:Bounds x="5850.0" y="3560.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_hold_timeout" bpmnElement="L_hold_timeout">
+        <dc:Bounds x="5868.0" y="3630.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5808.0" y="3678.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_depot_pod" bpmnElement="L_depot_pod">
+        <dc:Bounds x="6290.0" y="4700.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_depot_gate" bpmnElement="L_depot_gate">
+        <dc:Bounds x="6803.0" y="798.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6743.0" y="860.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_ship_return" bpmnElement="L_ship_return">
+        <dc:Bounds x="4610.0" y="1125.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4550.0" y="1173.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_address_request" bpmnElement="L_address_request">
+        <dc:Bounds x="5410.0" y="3240.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_address" bpmnElement="L_address">
+        <dc:Bounds x="5850.0" y="3240.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_address_timeout" bpmnElement="L_address_timeout">
+        <dc:Bounds x="5868.0" y="3310.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5808.0" y="3358.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_surcharge_rule" bpmnElement="L_surcharge_rule">
+        <dc:Bounds x="6290.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_surcharge_gate" bpmnElement="L_surcharge_gate">
+        <dc:Bounds x="6803.0" y="478.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6743.0" y="540.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_surcharge" bpmnElement="L_surcharge">
+        <dc:Bounds x="7170.0" y="1920.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_surcharge_accept" bpmnElement="L_surcharge_accept">
+        <dc:Bounds x="7683.0" y="478.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="7623.0" y="540.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_address_limit" bpmnElement="L_address_limit">
+        <dc:Bounds x="4603.0" y="478.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4543.0" y="540.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_address_count" bpmnElement="L_address_count">
+        <dc:Bounds x="4970.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_delivery_damage" bpmnElement="L_delivery_damage">
+        <dc:Bounds x="4530.0" y="5520.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_delivery_claim_gate" bpmnElement="L_delivery_claim_gate">
+        <dc:Bounds x="5043.0" y="5538.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4983.0" y="5600.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_delivery_replace" bpmnElement="L_delivery_replace">
+        <dc:Bounds x="5410.0" y="5840.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_delivery_refund" bpmnElement="L_delivery_refund">
+        <dc:Bounds x="5410.0" y="5520.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_ship_end" bpmnElement="L_ship_end">
+        <dc:Bounds x="5490.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5430.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_reship_gate" bpmnElement="L_reship_gate">
+        <dc:Bounds x="5923.0" y="5858.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5863.0" y="5920.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_tracking_merge" bpmnElement="L_tracking_merge">
+        <dc:Bounds x="1963.0" y="478.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1903.0" y="540.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_dispatch_merge" bpmnElement="L_dispatch_merge">
+        <dc:Bounds x="643.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="583.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_delivery_instructions" bpmnElement="L_delivery_instructions">
+        <dc:Bounds x="2770.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_track_error_L_track_fail" bpmnElement="Flow_L_track_error_L_track_fail">
+        <di:waypoint x="1488.0" y="2030.0" />
+        <di:waypoint x="1488.0" y="2094.0" />
+        <di:waypoint x="1820.0" y="2094.0" />
+        <di:waypoint x="1820.0" y="825.0" />
+        <di:waypoint x="1890.0" y="825.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_track_fail_L_track_reconcile" bpmnElement="Flow_L_track_fail_L_track_reconcile">
+        <di:waypoint x="1990.0" y="870.0" />
+        <di:waypoint x="1990.0" y="934.0" />
+        <di:waypoint x="1864.0" y="934.0" />
+        <di:waypoint x="1864.0" y="1254.0" />
+        <di:waypoint x="1990.0" y="1254.0" />
+        <di:waypoint x="1990.0" y="1190.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_ship_start_L_parallel" bpmnElement="Flow_L_ship_start_L_parallel">
+        <di:waypoint x="250.0" y="185.0" />
+        <di:waypoint x="643.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_parallel_L_legs" bpmnElement="Flow_L_parallel_L_legs">
+        <di:waypoint x="1110.0" y="212.0" />
+        <di:waypoint x="1110.0" y="2465.0" />
+        <di:waypoint x="1450.0" y="2465.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_parallel_L_notify_shipper" bpmnElement="Flow_L_parallel_L_notify_shipper">
+        <di:waypoint x="1137.0" y="185.0" />
+        <di:waypoint x="1201.0" y="185.0" />
+        <di:waypoint x="1201.0" y="1965.0" />
+        <di:waypoint x="1450.0" y="1965.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_legs_L_join" bpmnElement="Flow_L_legs_L_join">
+        <di:waypoint x="1650.0" y="2465.0" />
+        <di:waypoint x="1864.0" y="2465.0" />
+        <di:waypoint x="1864.0" y="1273.0" />
+        <di:waypoint x="1670.0" y="1273.0" />
+        <di:waypoint x="1670.0" y="185.0" />
+        <di:waypoint x="1963.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_notify_shipper_L_join" bpmnElement="Flow_L_notify_shipper_L_join">
+        <di:waypoint x="1650.0" y="1965.0" />
+        <di:waypoint x="1714.0" y="1965.0" />
+        <di:waypoint x="1714.0" y="505.0" />
+        <di:waypoint x="1963.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_track_reconcile_L_join" bpmnElement="Flow_L_track_reconcile_L_join">
+        <di:waypoint x="1990.0" y="1100.0" />
+        <di:waypoint x="1990.0" y="1036.0" />
+        <di:waypoint x="2116.0" y="1036.0" />
+        <di:waypoint x="2116.0" y="596.0" />
+        <di:waypoint x="1990.0" y="596.0" />
+        <di:waypoint x="1990.0" y="532.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_join_L_out" bpmnElement="Flow_L_join_L_out">
+        <di:waypoint x="2017.0" y="185.0" />
+        <di:waypoint x="2330.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_out_L_recipient_notice" bpmnElement="Flow_L_out_L_recipient_notice">
+        <di:waypoint x="2530.0" y="185.0" />
+        <di:waypoint x="2770.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_recipient_notice_L_deliver" bpmnElement="Flow_L_recipient_notice_L_deliver">
+        <di:waypoint x="3410.0" y="2965.0" />
+        <di:waypoint x="3474.0" y="2965.0" />
+        <di:waypoint x="3474.0" y="4105.0" />
+        <di:waypoint x="3650.0" y="4105.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_deliver_L_delivery_gate" bpmnElement="Flow_L_deliver_L_delivery_gate">
+        <di:waypoint x="3850.0" y="4105.0" />
+        <di:waypoint x="3914.0" y="4105.0" />
+        <di:waypoint x="3914.0" y="4122.28" />
+        <di:waypoint x="4180.28" y="4122.28" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delivery_gate_L_ship_end" bpmnElement="Flow_L_delivery_gate_L_ship_end">
+        <di:waypoint x="4199.72" y="4122.28" />
+        <di:waypoint x="4234.0" y="4122.28" />
+        <di:waypoint x="4234.0" y="4149.0" />
+        <di:waypoint x="4055.0" y="4149.0" />
+        <di:waypoint x="4055.0" y="185.0" />
+        <di:waypoint x="4530.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4235.72" y="4072.28" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delivery_gate_L_delivery_count" bpmnElement="Flow_L_delivery_gate_L_delivery_count">
+        <di:waypoint x="4190.0" y="4132.0" />
+        <di:waypoint x="4190.0" y="4196.0" />
+        <di:waypoint x="4146.0" y="4196.0" />
+        <di:waypoint x="4146.0" y="825.0" />
+        <di:waypoint x="4530.0" y="825.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4113.0" y="4210.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delivery_gate_L_address_limit" bpmnElement="Flow_L_delivery_gate_L_address_limit">
+        <di:waypoint x="4163.0" y="4105.0" />
+        <di:waypoint x="4099.0" y="4105.0" />
+        <di:waypoint x="4099.0" y="505.0" />
+        <di:waypoint x="4603.0" y="505.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4197.95" y="4019.0" width="74.1" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delivery_gate_L_delivery_damage" bpmnElement="Flow_L_delivery_gate_L_delivery_damage">
+        <di:waypoint x="4217.0" y="4105.0" />
+        <di:waypoint x="4281.0" y="4105.0" />
+        <di:waypoint x="4281.0" y="5565.0" />
+        <di:waypoint x="4530.0" y="5565.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4295.0" y="4132.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delivery_gate_L_ship_return" bpmnElement="Flow_L_delivery_gate_L_ship_return">
+        <di:waypoint x="4190.0" y="4078.0" />
+        <di:waypoint x="4190.0" y="4014.0" />
+        <di:waypoint x="4642.8" y="4014.0" />
+        <di:waypoint x="4642.8" y="1160.37" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4169.0" y="3958.0" width="124" height="42" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delivery_count_L_delivery_limit" bpmnElement="Flow_L_delivery_count_L_delivery_limit">
+        <di:waypoint x="4730.0" y="825.0" />
+        <di:waypoint x="5043.0" y="825.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delivery_limit_L_hold_notice" bpmnElement="Flow_L_delivery_limit_L_hold_notice">
+        <di:waypoint x="5070.0" y="852.0" />
+        <di:waypoint x="5070.0" y="3605.0" />
+        <di:waypoint x="5410.0" y="3605.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4976.2" y="943.0" width="79.8" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delivery_limit_L_delivery_wait" bpmnElement="Flow_L_delivery_limit_L_delivery_wait">
+        <di:waypoint x="5097.0" y="825.0" />
+        <di:waypoint x="5490.0" y="825.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5166.0" y="783.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delivery_wait_L_deliver" bpmnElement="Flow_L_delivery_wait_L_deliver">
+        <di:waypoint x="5510.0" y="845.0" />
+        <di:waypoint x="5510.0" y="909.0" />
+        <di:waypoint x="3750.0" y="909.0" />
+        <di:waypoint x="3750.0" y="4060.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_hold_notice_L_hold" bpmnElement="Flow_L_hold_notice_L_hold">
+        <di:waypoint x="5610.0" y="3605.0" />
+        <di:waypoint x="5850.0" y="3605.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_hold_L_depot_pod" bpmnElement="Flow_L_hold_L_depot_pod">
+        <di:waypoint x="6050.0" y="3605.0" />
+        <di:waypoint x="6114.0" y="3605.0" />
+        <di:waypoint x="6114.0" y="4745.0" />
+        <di:waypoint x="6290.0" y="4745.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_depot_pod_L_depot_gate" bpmnElement="Flow_L_depot_pod_L_depot_gate">
+        <di:waypoint x="6490.0" y="4745.0" />
+        <di:waypoint x="6554.0" y="4745.0" />
+        <di:waypoint x="6554.0" y="825.0" />
+        <di:waypoint x="6803.0" y="825.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_depot_gate_L_ship_end" bpmnElement="Flow_L_depot_gate_L_ship_end">
+        <di:waypoint x="6830.0" y="798.0" />
+        <di:waypoint x="6830.0" y="734.0" />
+        <di:waypoint x="5196.0" y="734.0" />
+        <di:waypoint x="5196.0" y="320.0" />
+        <di:waypoint x="4630.0" y="320.0" />
+        <di:waypoint x="4630.0" y="230.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6753.0" y="692.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_depot_gate_L_ship_return" bpmnElement="Flow_L_depot_gate_L_ship_return">
+        <di:waypoint x="6830.0" y="852.0" />
+        <di:waypoint x="6830.0" y="1145.0" />
+        <di:waypoint x="4650.0" y="1145.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6692.0" y="936.0" width="124" height="42" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_hold_timeout_L_ship_return" bpmnElement="Flow_L_hold_timeout_L_ship_return">
+        <di:waypoint x="5888.0" y="3670.0" />
+        <di:waypoint x="5888.0" y="3734.0" />
+        <di:waypoint x="4714.0" y="3734.0" />
+        <di:waypoint x="4714.0" y="1157.8" />
+        <di:waypoint x="4645.37" y="1157.8" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_address_limit_L_address_count" bpmnElement="Flow_L_address_limit_L_address_count">
+        <di:waypoint x="4657.0" y="505.0" />
+        <di:waypoint x="4970.0" y="505.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4726.0" y="463.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_address_limit_L_ship_return" bpmnElement="Flow_L_address_limit_L_ship_return">
+        <di:waypoint x="4630.0" y="532.0" />
+        <di:waypoint x="4630.0" y="596.0" />
+        <di:waypoint x="4504.0" y="596.0" />
+        <di:waypoint x="4504.0" y="1061.0" />
+        <di:waypoint x="4630.0" y="1061.0" />
+        <di:waypoint x="4630.0" y="1125.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4553.0" y="610.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_address_count_L_address_request" bpmnElement="Flow_L_address_count_L_address_request">
+        <di:waypoint x="5170.0" y="505.0" />
+        <di:waypoint x="5240.0" y="505.0" />
+        <di:waypoint x="5240.0" y="690.0" />
+        <di:waypoint x="5152.0" y="690.0" />
+        <di:waypoint x="5152.0" y="3285.0" />
+        <di:waypoint x="5410.0" y="3285.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_address_request_L_address" bpmnElement="Flow_L_address_request_L_address">
+        <di:waypoint x="5610.0" y="3285.0" />
+        <di:waypoint x="5850.0" y="3285.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_address_L_surcharge_rule" bpmnElement="Flow_L_address_L_surcharge_rule">
+        <di:waypoint x="6050.0" y="3285.0" />
+        <di:waypoint x="6114.0" y="3285.0" />
+        <di:waypoint x="6114.0" y="505.0" />
+        <di:waypoint x="6290.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_surcharge_rule_L_surcharge_gate" bpmnElement="Flow_L_surcharge_rule_L_surcharge_gate">
+        <di:waypoint x="6490.0" y="505.0" />
+        <di:waypoint x="6803.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_surcharge_gate_L_surcharge" bpmnElement="Flow_L_surcharge_gate_L_surcharge">
+        <di:waypoint x="6857.0" y="505.0" />
+        <di:waypoint x="6921.0" y="505.0" />
+        <di:waypoint x="6921.0" y="1965.0" />
+        <di:waypoint x="7170.0" y="1965.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6935.0" y="532.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_surcharge_gate_L_deliver" bpmnElement="Flow_L_surcharge_gate_L_deliver">
+        <di:waypoint x="6830.0" y="532.0" />
+        <di:waypoint x="6830.0" y="596.0" />
+        <di:waypoint x="6874.0" y="596.0" />
+        <di:waypoint x="6874.0" y="4061.0" />
+        <di:waypoint x="3958.0" y="4061.0" />
+        <di:waypoint x="3958.0" y="4166.28" />
+        <di:waypoint x="3914.0" y="4166.28" />
+        <di:waypoint x="3914.0" y="4127.0" />
+        <di:waypoint x="3850.0" y="4127.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6788.0" y="609.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_surcharge_L_surcharge_accept" bpmnElement="Flow_L_surcharge_L_surcharge_accept">
+        <di:waypoint x="7370.0" y="1965.0" />
+        <di:waypoint x="7801.0" y="1965.0" />
+        <di:waypoint x="7801.0" y="505.0" />
+        <di:waypoint x="7737.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_surcharge_accept_L_deliver" bpmnElement="Flow_L_surcharge_accept_L_deliver">
+        <di:waypoint x="7683.0" y="505.0" />
+        <di:waypoint x="7619.0" y="505.0" />
+        <di:waypoint x="7619.0" y="434.0" />
+        <di:waypoint x="5630.0" y="434.0" />
+        <di:waypoint x="5630.0" y="1017.0" />
+        <di:waypoint x="3794.0" y="1017.0" />
+        <di:waypoint x="3794.0" y="3996.0" />
+        <di:waypoint x="3772.0" y="3996.0" />
+        <di:waypoint x="3772.0" y="4060.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="7533.0" y="450.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_surcharge_accept_L_ship_return" bpmnElement="Flow_L_surcharge_accept_L_ship_return">
+        <di:waypoint x="7710.0" y="532.0" />
+        <di:waypoint x="7710.0" y="1229.0" />
+        <di:waypoint x="4630.0" y="1229.0" />
+        <di:waypoint x="4630.0" y="1165.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="7724.0" y="623.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_address_timeout_L_ship_return" bpmnElement="Flow_L_address_timeout_L_ship_return">
+        <di:waypoint x="5888.0" y="3350.0" />
+        <di:waypoint x="5888.0" y="3414.0" />
+        <di:waypoint x="4546.0" y="3414.0" />
+        <di:waypoint x="4546.0" y="1145.0" />
+        <di:waypoint x="4610.0" y="1145.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delivery_damage_L_delivery_claim_gate" bpmnElement="Flow_L_delivery_damage_L_delivery_claim_gate">
+        <di:waypoint x="4730.0" y="5565.0" />
+        <di:waypoint x="5043.0" y="5565.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delivery_claim_gate_L_delivery_replace" bpmnElement="Flow_L_delivery_claim_gate_L_delivery_replace">
+        <di:waypoint x="5070.0" y="5592.0" />
+        <di:waypoint x="5070.0" y="5885.0" />
+        <di:waypoint x="5410.0" y="5885.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5084.0" y="5683.0" width="108.3" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delivery_claim_gate_L_delivery_refund" bpmnElement="Flow_L_delivery_claim_gate_L_delivery_refund">
+        <di:waypoint x="5097.0" y="5565.0" />
+        <di:waypoint x="5161.0" y="5565.0" />
+        <di:waypoint x="5161.0" y="5674.0" />
+        <di:waypoint x="5510.0" y="5674.0" />
+        <di:waypoint x="5510.0" y="5610.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5175.0" y="5592.0" width="108.3" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delivery_replace_L_deliver" bpmnElement="Flow_L_delivery_replace_L_deliver">
+        <di:waypoint x="5610.0" y="5885.0" />
+        <di:waypoint x="5674.0" y="5885.0" />
+        <di:waypoint x="5674.0" y="5832.0" />
+        <di:waypoint x="6041.0" y="5832.0" />
+        <di:waypoint x="6041.0" y="5885.0" />
+        <di:waypoint x="5977.0" y="5885.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delivery_refund_L_ship_return" bpmnElement="Flow_L_delivery_refund_L_ship_return">
+        <di:waypoint x="5410.0" y="5565.0" />
+        <di:waypoint x="5346.0" y="5565.0" />
+        <di:waypoint x="5346.0" y="3778.0" />
+        <di:waypoint x="4504.0" y="3778.0" />
+        <di:waypoint x="4504.0" y="1074.0" />
+        <di:waypoint x="4598.8" y="1074.0" />
+        <di:waypoint x="4598.8" y="973.0" />
+        <di:waypoint x="4642.8" y="973.0" />
+        <di:waypoint x="4642.8" y="1129.63" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_reship_gate_L_parallel" bpmnElement="Flow_L_reship_gate_L_parallel">
+        <di:waypoint x="5923.0" y="5885.0" />
+        <di:waypoint x="5859.0" y="5885.0" />
+        <di:waypoint x="5859.0" y="6000.0" />
+        <di:waypoint x="670.0" y="6000.0" />
+        <di:waypoint x="670.0" y="212.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5873.0" y="5972.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_reship_gate_L_deliver" bpmnElement="Flow_L_reship_gate_L_deliver">
+        <di:waypoint x="5950.0" y="5858.0" />
+        <di:waypoint x="5950.0" y="5794.0" />
+        <di:waypoint x="5824.0" y="5794.0" />
+        <di:waypoint x="5824.0" y="5956.0" />
+        <di:waypoint x="3750.0" y="5956.0" />
+        <di:waypoint x="3750.0" y="4150.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5860.55" y="5752.0" width="96.9" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_tracking_merge_L_join" bpmnElement="Flow_L_tracking_merge_L_join">
+        <di:waypoint x="1990.0" y="478.0" />
+        <di:waypoint x="1990.0" y="212.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_dispatch_merge_L_parallel" bpmnElement="Flow_L_dispatch_merge_L_parallel">
+        <di:waypoint x="697.0" y="185.0" />
+        <di:waypoint x="1083.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delivery_instructions_L_recipient_notice" bpmnElement="Flow_L_delivery_instructions_L_recipient_notice">
+        <di:waypoint x="2970.0" y="185.0" />
+        <di:waypoint x="3034.0" y="185.0" />
+        <di:waypoint x="3034.0" y="2965.0" />
+        <di:waypoint x="3210.0" y="2965.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Shape_L_check_proof" bpmnElement="L_check_proof">
+        <dc:Bounds x="4530.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_proof_gate" bpmnElement="L_proof_gate">
+        <dc:Bounds x="5043.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4983.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_recover_proof" bpmnElement="L_recover_proof">
+        <dc:Bounds x="5410.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_check_proof_L_proof_gate" bpmnElement="Flow_L_check_proof_L_proof_gate">
+        <di:waypoint x="4730.0" y="185.0" />
+        <di:waypoint x="5043.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_proof_gate_L_ship_end" bpmnElement="Flow_L_proof_gate_L_ship_end">
+        <di:waypoint x="5097.0" y="185.0" />
+        <di:waypoint x="5490.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5166.0" y="143.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_proof_gate_L_recover_proof" bpmnElement="Flow_L_proof_gate_L_recover_proof">
+        <di:waypoint x="5070.0" y="212.0" />
+        <di:waypoint x="5070.0" y="276.0" />
+        <di:waypoint x="5346.0" y="276.0" />
+        <di:waypoint x="5346.0" y="505.0" />
+        <di:waypoint x="5410.0" y="505.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5149.7" y="234.0" width="102.6" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_recover_proof_L_ship_end" bpmnElement="Flow_L_recover_proof_L_ship_end">
+        <di:waypoint x="5510.0" y="460.0" />
+        <di:waypoint x="5510.0" y="205.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5524.0" y="341.0" width="91.2" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_L_legs">
+    <bpmndi:BPMNPlane id="Plane_L_legs" bpmnElement="L_legs">
+      <bpmndi:BPMNShape id="Shape_L_legs_lane_0" bpmnElement="L_legs_lane_0" isHorizontal="true">
+        <dc:Bounds x="50" y="50" width="5680.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_legs_lane_1" bpmnElement="L_legs_lane_1" isHorizontal="true">
+        <dc:Bounds x="50" y="870" width="5680.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_legs_lane_2" bpmnElement="L_legs_lane_2" isHorizontal="true">
+        <dc:Bounds x="50" y="1690" width="5680.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_legs_lane_3" bpmnElement="L_legs_lane_3" isHorizontal="true">
+        <dc:Bounds x="50" y="2510" width="5680.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_leg_start" bpmnElement="L_leg_start">
+        <dc:Bounds x="210.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_sort" bpmnElement="L_sort">
+        <dc:Bounds x="570.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_scan" bpmnElement="L_scan">
+        <dc:Bounds x="1010.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_scan_error" bpmnElement="L_scan_error">
+        <dc:Bounds x="1028.0" y="210.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="968.0" y="258.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_manual_scan" bpmnElement="L_manual_scan">
+        <dc:Bounds x="1450.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_reconcile" bpmnElement="L_reconcile">
+        <dc:Bounds x="1890.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_damage_gate" bpmnElement="L_damage_gate">
+        <dc:Bounds x="1523.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1463.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_customs_gate" bpmnElement="L_customs_gate">
+        <dc:Bounds x="1963.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1903.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_customs_check" bpmnElement="L_customs_check">
+        <dc:Bounds x="2330.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_customs_result" bpmnElement="L_customs_result">
+        <dc:Bounds x="2843.0" y="478.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2783.0" y="540.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_doc_request" bpmnElement="L_doc_request">
+        <dc:Bounds x="3210.0" y="1280.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_documents" bpmnElement="L_documents">
+        <dc:Bounds x="3650.0" y="1280.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_doc_timeout" bpmnElement="L_doc_timeout">
+        <dc:Bounds x="3668.0" y="1350.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3608.0" y="1398.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_doc_review" bpmnElement="L_doc_review">
+        <dc:Bounds x="4090.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_doc_gate" bpmnElement="L_doc_gate">
+        <dc:Bounds x="4603.0" y="478.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4543.0" y="540.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_doc_limit" bpmnElement="L_doc_limit">
+        <dc:Bounds x="5043.0" y="2118.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4983.0" y="2180.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_doc_count" bpmnElement="L_doc_count">
+        <dc:Bounds x="5410.0" y="2100.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_leg_return" bpmnElement="L_leg_return">
+        <dc:Bounds x="5490.0" y="485.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5430.0" y="533.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_leg_end" bpmnElement="L_leg_end">
+        <dc:Bounds x="2850.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2790.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_damage" bpmnElement="L_damage" isExpanded="false">
+        <dc:Bounds x="1890.0" y="2920.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_movement" bpmnElement="L_movement" isExpanded="false">
+        <dc:Bounds x="2330.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_leg_start_L_sort" bpmnElement="Flow_L_leg_start_L_sort">
+        <di:waypoint x="250.0" y="185.0" />
+        <di:waypoint x="570.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_sort_L_scan" bpmnElement="Flow_L_sort_L_scan">
+        <di:waypoint x="770.0" y="185.0" />
+        <di:waypoint x="1010.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_scan_L_damage_gate" bpmnElement="Flow_L_scan_L_damage_gate">
+        <di:waypoint x="1210.0" y="185.0" />
+        <di:waypoint x="1523.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_scan_error_L_manual_scan" bpmnElement="Flow_L_scan_error_L_manual_scan">
+        <di:waypoint x="1048.0" y="250.0" />
+        <di:waypoint x="1048.0" y="505.0" />
+        <di:waypoint x="1450.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_manual_scan_L_reconcile" bpmnElement="Flow_L_manual_scan_L_reconcile">
+        <di:waypoint x="1650.0" y="505.0" />
+        <di:waypoint x="1714.0" y="505.0" />
+        <di:waypoint x="1714.0" y="614.0" />
+        <di:waypoint x="1990.0" y="614.0" />
+        <di:waypoint x="1990.0" y="550.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_reconcile_L_damage_gate" bpmnElement="Flow_L_reconcile_L_damage_gate">
+        <di:waypoint x="1890.0" y="505.0" />
+        <di:waypoint x="1826.0" y="505.0" />
+        <di:waypoint x="1826.0" y="94.0" />
+        <di:waypoint x="1550.0" y="94.0" />
+        <di:waypoint x="1550.0" y="158.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_damage_gate_L_damage" bpmnElement="Flow_L_damage_gate_L_damage">
+        <di:waypoint x="1550.0" y="212.0" />
+        <di:waypoint x="1550.0" y="276.0" />
+        <di:waypoint x="1782.0" y="276.0" />
+        <di:waypoint x="1782.0" y="2965.0" />
+        <di:waypoint x="1890.0" y="2965.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1555.0" y="290.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_damage_gate_L_customs_gate" bpmnElement="Flow_L_damage_gate_L_customs_gate">
+        <di:waypoint x="1577.0" y="185.0" />
+        <di:waypoint x="1963.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1646.0" y="143.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_damage_L_customs_gate" bpmnElement="Flow_L_damage_L_customs_gate">
+        <di:waypoint x="1990.0" y="2920.0" />
+        <di:waypoint x="1990.0" y="2856.0" />
+        <di:waypoint x="2116.0" y="2856.0" />
+        <di:waypoint x="2116.0" y="94.0" />
+        <di:waypoint x="1990.0" y="94.0" />
+        <di:waypoint x="1990.0" y="158.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_customs_gate_L_customs_check" bpmnElement="Flow_L_customs_gate_L_customs_check">
+        <di:waypoint x="1990.0" y="212.0" />
+        <di:waypoint x="1990.0" y="276.0" />
+        <di:waypoint x="2266.0" y="276.0" />
+        <di:waypoint x="2266.0" y="505.0" />
+        <di:waypoint x="2330.0" y="505.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1993.95" y="290.0" width="74.1" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_customs_gate_L_move" bpmnElement="Flow_L_customs_gate_L_move">
+        <di:waypoint x="2017.0" y="185.0" />
+        <di:waypoint x="2330.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2146.0" y="143.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_customs_check_L_customs_result" bpmnElement="Flow_L_customs_check_L_customs_result">
+        <di:waypoint x="2530.0" y="505.0" />
+        <di:waypoint x="2843.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_customs_result_L_move" bpmnElement="Flow_L_customs_result_L_move">
+        <di:waypoint x="2870.0" y="478.0" />
+        <di:waypoint x="2870.0" y="294.0" />
+        <di:waypoint x="2430.0" y="294.0" />
+        <di:waypoint x="2430.0" y="230.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2884.0" y="359.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_customs_result_L_doc_request" bpmnElement="Flow_L_customs_result_L_doc_request">
+        <di:waypoint x="2897.0" y="505.0" />
+        <di:waypoint x="2961.0" y="505.0" />
+        <di:waypoint x="2961.0" y="1325.0" />
+        <di:waypoint x="3210.0" y="1325.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2975.0" y="532.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_doc_request_L_documents" bpmnElement="Flow_L_doc_request_L_documents">
+        <di:waypoint x="3410.0" y="1325.0" />
+        <di:waypoint x="3650.0" y="1325.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_documents_L_doc_review" bpmnElement="Flow_L_documents_L_doc_review">
+        <di:waypoint x="3850.0" y="1325.0" />
+        <di:waypoint x="3914.0" y="1325.0" />
+        <di:waypoint x="3914.0" y="505.0" />
+        <di:waypoint x="4090.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_doc_review_L_doc_gate" bpmnElement="Flow_L_doc_review_L_doc_gate">
+        <di:waypoint x="4290.0" y="505.0" />
+        <di:waypoint x="4603.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_doc_gate_L_move" bpmnElement="Flow_L_doc_gate_L_move">
+        <di:waypoint x="4630.0" y="478.0" />
+        <di:waypoint x="4630.0" y="76.0" />
+        <di:waypoint x="2430.0" y="76.0" />
+        <di:waypoint x="2430.0" y="140.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4644.0" y="359.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_doc_gate_L_doc_limit" bpmnElement="Flow_L_doc_gate_L_doc_limit">
+        <di:waypoint x="4657.0" y="505.0" />
+        <di:waypoint x="4721.0" y="505.0" />
+        <di:waypoint x="4721.0" y="2145.0" />
+        <di:waypoint x="5043.0" y="2145.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4735.0" y="532.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_doc_limit_L_doc_count" bpmnElement="Flow_L_doc_limit_L_doc_count">
+        <di:waypoint x="5097.0" y="2145.0" />
+        <di:waypoint x="5161.0" y="2145.0" />
+        <di:waypoint x="5161.0" y="2254.0" />
+        <di:waypoint x="5510.0" y="2254.0" />
+        <di:waypoint x="5510.0" y="2190.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5175.0" y="2172.0" width="74.1" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_doc_limit_L_leg_return" bpmnElement="Flow_L_doc_limit_L_leg_return">
+        <di:waypoint x="5070.0" y="2118.0" />
+        <di:waypoint x="5070.0" y="505.0" />
+        <di:waypoint x="5490.0" y="505.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5084.0" y="1999.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_doc_count_L_doc_request" bpmnElement="Flow_L_doc_count_L_doc_request">
+        <di:waypoint x="5410.0" y="2145.0" />
+        <di:waypoint x="5346.0" y="2145.0" />
+        <di:waypoint x="5346.0" y="1434.0" />
+        <di:waypoint x="3310.0" y="1434.0" />
+        <di:waypoint x="3310.0" y="1370.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_doc_timeout_L_leg_return" bpmnElement="Flow_L_doc_timeout_L_leg_return">
+        <di:waypoint x="3688.0" y="1390.0" />
+        <di:waypoint x="3688.0" y="1478.0" />
+        <di:waypoint x="5510.0" y="1478.0" />
+        <di:waypoint x="5510.0" y="525.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_movement_L_leg_end" bpmnElement="Flow_L_movement_L_leg_end">
+        <di:waypoint x="2530.0" y="185.0" />
+        <di:waypoint x="2850.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_L_damage">
+    <bpmndi:BPMNPlane id="Plane_L_damage" bpmnElement="L_damage">
+      <bpmndi:BPMNShape id="Shape_L_damage_lane_0" bpmnElement="L_damage_lane_0" isHorizontal="true">
+        <dc:Bounds x="50" y="50" width="2960.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_damage_lane_1" bpmnElement="L_damage_lane_1" isHorizontal="true">
+        <dc:Bounds x="50" y="870" width="2960.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_damage_start" bpmnElement="L_damage_start">
+        <dc:Bounds x="210.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_inspect" bpmnElement="L_inspect">
+        <dc:Bounds x="570.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_insured" bpmnElement="L_insured">
+        <dc:Bounds x="1083.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1023.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_claim" bpmnElement="L_claim">
+        <dc:Bounds x="1450.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_claim_gate" bpmnElement="L_claim_gate">
+        <dc:Bounds x="1963.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1903.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_claim_refund" bpmnElement="L_claim_refund">
+        <dc:Bounds x="2330.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_replace" bpmnElement="L_replace">
+        <dc:Bounds x="2330.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_uninsured" bpmnElement="L_uninsured">
+        <dc:Bounds x="1450.0" y="1280.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_damage_return" bpmnElement="L_damage_return">
+        <dc:Bounds x="1970.0" y="485.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1910.0" y="533.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_damage_end" bpmnElement="L_damage_end">
+        <dc:Bounds x="2850.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2790.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_damage_start_L_inspect" bpmnElement="Flow_L_damage_start_L_inspect">
+        <di:waypoint x="250.0" y="185.0" />
+        <di:waypoint x="570.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_inspect_L_insured" bpmnElement="Flow_L_inspect_L_insured">
+        <di:waypoint x="770.0" y="185.0" />
+        <di:waypoint x="1083.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_insured_L_claim" bpmnElement="Flow_L_insured_L_claim">
+        <di:waypoint x="1137.0" y="185.0" />
+        <di:waypoint x="1450.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1206.0" y="143.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_insured_L_uninsured" bpmnElement="Flow_L_insured_L_uninsured">
+        <di:waypoint x="1110.0" y="212.0" />
+        <di:waypoint x="1110.0" y="1325.0" />
+        <di:waypoint x="1450.0" y="1325.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1124.0" y="303.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_uninsured_L_damage_return" bpmnElement="Flow_L_uninsured_L_damage_return">
+        <di:waypoint x="1650.0" y="1325.0" />
+        <di:waypoint x="1714.0" y="1325.0" />
+        <di:waypoint x="1714.0" y="589.0" />
+        <di:waypoint x="1990.0" y="589.0" />
+        <di:waypoint x="1990.0" y="525.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_claim_L_claim_gate" bpmnElement="Flow_L_claim_L_claim_gate">
+        <di:waypoint x="1650.0" y="185.0" />
+        <di:waypoint x="1963.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_claim_gate_L_claim_refund" bpmnElement="Flow_L_claim_gate_L_claim_refund">
+        <di:waypoint x="1990.0" y="212.0" />
+        <di:waypoint x="1990.0" y="396.0" />
+        <di:waypoint x="2430.0" y="396.0" />
+        <di:waypoint x="2430.0" y="460.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2004.0" y="303.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_claim_gate_L_replace" bpmnElement="Flow_L_claim_gate_L_replace">
+        <di:waypoint x="2017.0" y="185.0" />
+        <di:waypoint x="2330.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2073.55" y="143.0" width="96.9" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_claim_refund_L_damage_return" bpmnElement="Flow_L_claim_refund_L_damage_return">
+        <di:waypoint x="2330.0" y="505.0" />
+        <di:waypoint x="2010.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_replace_L_damage_end" bpmnElement="Flow_L_replace_L_damage_end">
+        <di:waypoint x="2530.0" y="185.0" />
+        <di:waypoint x="2850.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_L_movement">
+    <bpmndi:BPMNPlane id="Plane_L_movement" bpmnElement="L_movement">
+      <bpmndi:BPMNShape id="Shape_L_movement_lane_0" bpmnElement="L_movement_lane_0" isHorizontal="true">
+        <dc:Bounds x="50" y="50" width="2600.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_movement_lane_1" bpmnElement="L_movement_lane_1" isHorizontal="true">
+        <dc:Bounds x="50" y="870" width="2600.0" height="1140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_move" bpmnElement="L_move">
+        <dc:Bounds x="570.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_event_gate" bpmnElement="L_event_gate">
+        <dc:Bounds x="1083.0" y="978.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1023.0" y="1040.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_arrival" bpmnElement="L_arrival">
+        <dc:Bounds x="1530.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1470.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_delay" bpmnElement="L_delay">
+        <dc:Bounds x="1530.0" y="1305.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1470.0" y="1353.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_eta" bpmnElement="L_eta">
+        <dc:Bounds x="1530.0" y="1625.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1470.0" y="1673.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_reroute" bpmnElement="L_reroute">
+        <dc:Bounds x="1890.0" y="1280.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_arrival_wait" bpmnElement="L_arrival_wait">
+        <dc:Bounds x="2330.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_watchdog" bpmnElement="L_watchdog" isExpanded="false">
+        <dc:Bounds x="1890.0" y="1600.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_move_start" bpmnElement="L_move_start">
+        <dc:Bounds x="210.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_move_end" bpmnElement="L_move_end">
+        <dc:Bounds x="1970.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1910.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_move_L_event_gate" bpmnElement="Flow_L_move_L_event_gate">
+        <di:waypoint x="770.0" y="185.0" />
+        <di:waypoint x="834.0" y="185.0" />
+        <di:waypoint x="834.0" y="1005.0" />
+        <di:waypoint x="1083.0" y="1005.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_event_gate_L_arrival" bpmnElement="Flow_L_event_gate_L_arrival">
+        <di:waypoint x="1110.0" y="978.0" />
+        <di:waypoint x="1110.0" y="269.0" />
+        <di:waypoint x="1550.0" y="269.0" />
+        <di:waypoint x="1550.0" y="205.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_event_gate_L_delay" bpmnElement="Flow_L_event_gate_L_delay">
+        <di:waypoint x="1137.0" y="1005.0" />
+        <di:waypoint x="1201.0" y="1005.0" />
+        <di:waypoint x="1201.0" y="1241.0" />
+        <di:waypoint x="1550.0" y="1241.0" />
+        <di:waypoint x="1550.0" y="1305.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_event_gate_L_eta" bpmnElement="Flow_L_event_gate_L_eta">
+        <di:waypoint x="1110.0" y="1032.0" />
+        <di:waypoint x="1110.0" y="1561.0" />
+        <di:waypoint x="1550.0" y="1561.0" />
+        <di:waypoint x="1550.0" y="1625.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_arrival_L_leg_end" bpmnElement="Flow_L_arrival_L_leg_end">
+        <di:waypoint x="1570.0" y="185.0" />
+        <di:waypoint x="1970.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_delay_L_reroute" bpmnElement="Flow_L_delay_L_reroute">
+        <di:waypoint x="1570.0" y="1325.0" />
+        <di:waypoint x="1890.0" y="1325.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_reroute_L_arrival_wait" bpmnElement="Flow_L_reroute_L_arrival_wait">
+        <di:waypoint x="2090.0" y="1325.0" />
+        <di:waypoint x="2154.0" y="1325.0" />
+        <di:waypoint x="2154.0" y="614.0" />
+        <di:waypoint x="2430.0" y="614.0" />
+        <di:waypoint x="2430.0" y="550.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_arrival_wait_L_leg_end" bpmnElement="Flow_L_arrival_wait_L_leg_end">
+        <di:waypoint x="2330.0" y="505.0" />
+        <di:waypoint x="2266.0" y="505.0" />
+        <di:waypoint x="2266.0" y="185.0" />
+        <di:waypoint x="2010.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_eta_L_reroute" bpmnElement="Flow_L_eta_L_reroute">
+        <di:waypoint x="1570.0" y="1645.0" />
+        <di:waypoint x="1634.0" y="1645.0" />
+        <di:waypoint x="1634.0" y="1434.0" />
+        <di:waypoint x="1990.0" y="1434.0" />
+        <di:waypoint x="1990.0" y="1370.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_move_start_L_move" bpmnElement="Flow_L_move_start_L_move">
+        <di:waypoint x="250.0" y="185.0" />
+        <di:waypoint x="570.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_L_watchdog">
+    <bpmndi:BPMNPlane id="Plane_L_watchdog" bpmnElement="L_watchdog">
+      <bpmndi:BPMNShape id="Shape_L_watchdog_lane_0" bpmnElement="L_watchdog_lane_0" isHorizontal="true">
+        <dc:Bounds x="50" y="50" width="1640.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_missing_start" bpmnElement="L_missing_start">
+        <dc:Bounds x="210.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_trace" bpmnElement="L_trace">
+        <dc:Bounds x="570.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_trace_timeout" bpmnElement="L_trace_timeout">
+        <dc:Bounds x="588.0" y="210.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="528.0" y="258.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_trace_gate" bpmnElement="L_trace_gate">
+        <dc:Bounds x="1083.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1023.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_trace_found" bpmnElement="L_trace_found">
+        <dc:Bounds x="1530.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1470.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_lost_error" bpmnElement="L_lost_error">
+        <dc:Bounds x="1530.0" y="485.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1470.0" y="533.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_missing_start_L_trace" bpmnElement="Flow_L_missing_start_L_trace">
+        <di:waypoint x="250.0" y="185.0" />
+        <di:waypoint x="570.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_trace_L_trace_gate" bpmnElement="Flow_L_trace_L_trace_gate">
+        <di:waypoint x="770.0" y="185.0" />
+        <di:waypoint x="1083.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_trace_gate_L_trace_found" bpmnElement="Flow_L_trace_gate_L_trace_found">
+        <di:waypoint x="1137.0" y="185.0" />
+        <di:waypoint x="1530.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1206.0" y="143.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_trace_gate_L_lost_error" bpmnElement="Flow_L_trace_gate_L_lost_error">
+        <di:waypoint x="1110.0" y="212.0" />
+        <di:waypoint x="1110.0" y="505.0" />
+        <di:waypoint x="1530.0" y="505.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1124.0" y="303.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_trace_timeout_L_lost_error" bpmnElement="Flow_L_trace_timeout_L_lost_error">
+        <di:waypoint x="608.0" y="250.0" />
+        <di:waypoint x="608.0" y="421.0" />
+        <di:waypoint x="1550.0" y="421.0" />
+        <di:waypoint x="1550.0" y="485.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_L_booking_stage">
+    <bpmndi:BPMNPlane id="Plane_L_booking_stage" bpmnElement="L_booking_stage">
+      <bpmndi:BPMNShape id="Shape_L_booking_stage_lane_0" bpmnElement="L_booking_stage_lane_0" isHorizontal="true">
+        <dc:Bounds x="50" y="50" width="2600.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_booking_stage_lane_1" bpmnElement="L_booking_stage_lane_1" isHorizontal="true">
+        <dc:Bounds x="50" y="870" width="2600.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_schedule" bpmnElement="L_schedule">
+        <dc:Bounds x="1890.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_booking" bpmnElement="L_booking">
+        <dc:Bounds x="570.0" y="960.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_correct_limit" bpmnElement="L_correct_limit">
+        <dc:Bounds x="1963.0" y="478.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1903.0" y="540.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_valid" bpmnElement="L_valid">
+        <dc:Bounds x="1523.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1463.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_correction" bpmnElement="L_correction">
+        <dc:Bounds x="2330.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_rule" bpmnElement="L_rule">
+        <dc:Bounds x="1010.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_booking_stage_exit_L_cancel_charge" bpmnElement="L_booking_stage_exit_L_cancel_charge">
+        <dc:Bounds x="2410.0" y="1305.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2350.0" y="1353.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_booking_stage_exit_L_pickup" bpmnElement="L_booking_stage_exit_L_pickup">
+        <dc:Bounds x="2410.0" y="985.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2350.0" y="1033.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_L_booking_stage_start" bpmnElement="L_booking_stage_start">
+        <dc:Bounds x="210.0" y="985.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150.0" y="1033.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_booking_L_rule" bpmnElement="Flow_L_booking_L_rule">
+        <di:waypoint x="770.0" y="1005.0" />
+        <di:waypoint x="834.0" y="1005.0" />
+        <di:waypoint x="834.0" y="185.0" />
+        <di:waypoint x="1010.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_rule_L_valid" bpmnElement="Flow_L_rule_L_valid">
+        <di:waypoint x="1210.0" y="185.0" />
+        <di:waypoint x="1523.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_valid_L_schedule" bpmnElement="Flow_L_valid_L_schedule">
+        <di:waypoint x="1577.0" y="185.0" />
+        <di:waypoint x="1890.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1646.0" y="143.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_valid_L_correct_limit" bpmnElement="Flow_L_valid_L_correct_limit">
+        <di:waypoint x="1550.0" y="212.0" />
+        <di:waypoint x="1550.0" y="414.0" />
+        <di:waypoint x="1990.0" y="414.0" />
+        <di:waypoint x="1990.0" y="478.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1564.0" y="303.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_correct_limit_L_correction" bpmnElement="Flow_L_correct_limit_L_correction">
+        <di:waypoint x="2017.0" y="505.0" />
+        <di:waypoint x="2081.0" y="505.0" />
+        <di:waypoint x="2081.0" y="614.0" />
+        <di:waypoint x="2430.0" y="614.0" />
+        <di:waypoint x="2430.0" y="550.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2005.0" y="419.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_correct_limit_L_cancel_charge" bpmnElement="Flow_L_correct_limit_L_cancel_charge">
+        <di:waypoint x="1990.0" y="532.0" />
+        <di:waypoint x="1990.0" y="596.0" />
+        <di:waypoint x="2078.0" y="596.0" />
+        <di:waypoint x="2078.0" y="1241.0" />
+        <di:waypoint x="2430.0" y="1241.0" />
+        <di:waypoint x="2430.0" y="1305.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2092.0" y="625.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_correction_L_booking" bpmnElement="Flow_L_correction_L_booking">
+        <di:waypoint x="2330.0" y="505.0" />
+        <di:waypoint x="2266.0" y="505.0" />
+        <di:waypoint x="2266.0" y="461.0" />
+        <di:waypoint x="2034.0" y="461.0" />
+        <di:waypoint x="2034.0" y="896.0" />
+        <di:waypoint x="670.0" y="896.0" />
+        <di:waypoint x="670.0" y="960.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_schedule_L_pickup" bpmnElement="Flow_L_schedule_L_pickup">
+        <di:waypoint x="2090.0" y="185.0" />
+        <di:waypoint x="2154.0" y="185.0" />
+        <di:waypoint x="2154.0" y="570.0" />
+        <di:waypoint x="2474.0" y="570.0" />
+        <di:waypoint x="2474.0" y="921.0" />
+        <di:waypoint x="2430.0" y="921.0" />
+        <di:waypoint x="2430.0" y="985.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_L_booking_stage_start_L_booking" bpmnElement="Flow_L_booking_stage_start_L_booking">
+        <di:waypoint x="250.0" y="1005.0" />
+        <di:waypoint x="570.0" y="1005.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

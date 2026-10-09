@@ -1,0 +1,2856 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_student_project" targetNamespace="https://example.org/assignments">
+  <bpmn:process id="student_project" name="Assignment 1 - Student Project Approval and Allocation" isExecutable="false">
+    <bpmn:laneSet id="student_project_lanes">
+      <bpmn:lane id="student_project_lane_0" name="Student / Team">
+        <bpmn:flowNodeRef>S_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>S_proposal_catch_S_lapsed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>S_proposal_catch_S_rejected</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="student_project_lane_1" name="Project Coordinator">
+        <bpmn:flowNodeRef>S_invalid_handler</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="student_project_lane_2" name="Project Management System">
+        <bpmn:flowNodeRef>S_init</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>S_lapsed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>S_rejected</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>S_withdraw_notice</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>S_withdrawn</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>S_proposal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>S_post_approval</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>S_post_gate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>S_success</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="S_start" name="Team decides to submit">
+      <bpmn:outgoing>Flow_S_start_S_init</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="S_init" name="Open Project Record">
+      <bpmn:incoming>Flow_S_start_S_init</bpmn:incoming>
+      <bpmn:outgoing>Flow_S_init_S_submit</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="S_lapsed" name="Proposal lapsed">
+      <bpmn:incoming>Flow_S_post_gate_S_lapsed</bpmn:incoming>
+      <bpmn:incoming>Flow_S_proposal_catch_S_lapsed_S_lapsed</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="S_rejected" name="Proposal rejected">
+      <bpmn:incoming>Flow_S_proposal_catch_S_rejected_S_rejected</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_S_start_S_init" sourceRef="S_start" targetRef="S_init" />
+    <bpmn:sequenceFlow id="Flow_S_init_S_submit" sourceRef="S_init" targetRef="S_proposal" />
+    <bpmn:subProcess id="S_invalid_handler" name="Invalid team closure" triggeredByEvent="true">
+      <bpmn:laneSet id="S_invalid_handler_lanes">
+        <bpmn:lane id="S_invalid_handler_lane_0" name="Project Coordinator">
+          <bpmn:flowNodeRef>S_invalid_start</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_invalid_end</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="S_invalid_handler_lane_1" name="Project Management System">
+          <bpmn:flowNodeRef>S_invalid_notify</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+      <bpmn:startEvent id="S_invalid_start" name="Catch invalid team">
+        <bpmn:outgoing>Flow_S_invalid_start_S_invalid_notify</bpmn:outgoing>
+        <bpmn:errorEventDefinition errorRef="student_project_err_INVALID_TEAM" />
+      </bpmn:startEvent>
+      <bpmn:sendTask id="S_invalid_notify" name="Notify invalid team and reform advice">
+        <bpmn:incoming>Flow_S_invalid_start_S_invalid_notify</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_invalid_notify_S_invalid_end</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:endEvent id="S_invalid_end" name="Invalid team">
+        <bpmn:incoming>Flow_S_invalid_notify_S_invalid_end</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_S_invalid_start_S_invalid_notify" sourceRef="S_invalid_start" targetRef="S_invalid_notify" />
+      <bpmn:sequenceFlow id="Flow_S_invalid_notify_S_invalid_end" sourceRef="S_invalid_notify" targetRef="S_invalid_end" />
+    </bpmn:subProcess>
+    <bpmn:subProcess id="S_post_approval" name="Allocate Guide and Notify Student">
+      <bpmn:incoming>Flow_S_post_gate_S_post_approval</bpmn:incoming>
+      <bpmn:incoming>Flow_S_proposal_S_post_approval</bpmn:incoming>
+      <bpmn:outgoing>Flow_S_post_approval_S_post_gate</bpmn:outgoing>
+      <bpmn:laneSet id="S_post_approval_lanes">
+        <bpmn:lane id="S_post_approval_lane_0" name="Project Management System">
+          <bpmn:flowNodeRef>S_guide_rule</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_guide_available</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_wait</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_wait_limit</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_wait_count</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_reserve</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_reserve_comp</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_release</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_release_decline</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_attempt_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_finalize</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_notify</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_finalize_error</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_finalize_retry</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_finalize_retry_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_finalize_backoff</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_notify_error</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_notify_retry</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_notify_retry_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_notify_backoff</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_reserve_error</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_reserve_retry</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_reserve_retry_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_reserve_backoff</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_allocated</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_post_start</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_post_lapsed</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_set_lapsed</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_withdraw_handler</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="S_post_approval_lane_1" name="Project Coordinator">
+          <bpmn:flowNodeRef>S_manual</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_manual_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_finalize_manual</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_finalize_manual_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_notify_manual</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_notify_manual_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_reserve_manual</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_reserve_manual_gate</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="S_post_approval_lane_2" name="Faculty Guide">
+          <bpmn:flowNodeRef>S_allocation</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_decline_catch</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+      <bpmn:businessRuleTask id="S_guide_rule" name="Select matching guide below workload limit">
+        <bpmn:incoming>Flow_S_post_start_S_guide_rule</bpmn:incoming>
+        <bpmn:incoming>Flow_S_attempt_gate_S_guide_rule</bpmn:incoming>
+        <bpmn:incoming>Flow_S_wait_S_guide_rule</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_guide_rule_S_guide_available</bpmn:outgoing>
+      </bpmn:businessRuleTask>
+      <bpmn:exclusiveGateway id="S_guide_available" name="Matching guide available?" default="Flow_S_guide_available_S_manual">
+        <bpmn:incoming>Flow_S_guide_rule_S_guide_available</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_guide_available_S_reserve</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_guide_available_S_manual</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="S_manual" name="Allocate manual co-guide external guide or wait">
+        <bpmn:incoming>Flow_S_attempt_gate_S_manual</bpmn:incoming>
+        <bpmn:incoming>Flow_S_guide_available_S_manual</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_manual_S_manual_gate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="S_manual_gate" name="Manual allocation result" default="Flow_S_manual_gate_S_lapsed">
+        <bpmn:incoming>Flow_S_manual_S_manual_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_manual_gate_S_reserve</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_manual_gate_S_wait_limit</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_manual_gate_S_lapsed</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:intermediateCatchEvent id="S_wait" name="Wait before rechecking guides">
+        <bpmn:incoming>Flow_S_wait_count_S_wait</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_wait_S_guide_rule</bpmn:outgoing>
+        <bpmn:timerEventDefinition>
+          <bpmn:timeDuration>P1D</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:intermediateCatchEvent>
+      <bpmn:exclusiveGateway id="S_wait_limit" name="Waiting rounds below seven?" default="Flow_S_wait_limit_S_lapsed">
+        <bpmn:incoming>Flow_S_manual_gate_S_wait_limit</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_wait_limit_S_wait_count</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_wait_limit_S_lapsed</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="S_wait_count" name="Count waiting round">
+        <bpmn:incoming>Flow_S_wait_limit_S_wait_count</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_wait_count_S_wait</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:serviceTask id="S_reserve" name="Reserve and record guide slot">
+        <bpmn:incoming>Flow_S_reserve_backoff_S_reserve</bpmn:incoming>
+        <bpmn:incoming>Flow_S_reserve_manual_gate_S_reserve</bpmn:incoming>
+        <bpmn:incoming>Flow_S_guide_available_S_reserve</bpmn:incoming>
+        <bpmn:incoming>Flow_S_manual_gate_S_reserve</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_reserve_S_allocation</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:boundaryEvent id="S_reserve_comp" name="Compensation" attachedToRef="S_reserve" cancelActivity="false">
+        <bpmn:compensateEventDefinition />
+      </bpmn:boundaryEvent>
+      <bpmn:serviceTask id="S_release" name="Release guide slot idempotently" isForCompensation="true">
+        </bpmn:serviceTask>
+      <bpmn:subProcess id="S_allocation" name="Guide request and confirmation">
+        <bpmn:incoming>Flow_S_reserve_S_allocation</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_allocation_S_finalize</bpmn:outgoing>
+        <bpmn:laneSet id="S_allocation_lanes">
+          <bpmn:lane id="S_allocation_lane_0" name="Faculty Guide">
+            <bpmn:flowNodeRef>S_alloc_start</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_accept</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_accept_gate</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_declined_error</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_alloc_end</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_silent</bpmn:flowNodeRef>
+          </bpmn:lane>
+          <bpmn:lane id="S_allocation_lane_1" name="Project Management System">
+            <bpmn:flowNodeRef>S_request</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_request_error</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_request_retry</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_request_retry_gate</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_request_backoff</bpmn:flowNodeRef>
+          </bpmn:lane>
+          <bpmn:lane id="S_allocation_lane_2" name="Project Coordinator">
+            <bpmn:flowNodeRef>S_request_manual</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_request_manual_gate</bpmn:flowNodeRef>
+          </bpmn:lane>
+          <bpmn:lane id="S_allocation_team_lane" name="Student / Team">
+            <bpmn:flowNodeRef>S_agree_expectations</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_terms_gate</bpmn:flowNodeRef>
+          </bpmn:lane>
+        </bpmn:laneSet>
+        <bpmn:startEvent id="S_alloc_start" name="Allocation request begins">
+          <bpmn:outgoing>Flow_S_alloc_start_S_request</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:sendTask id="S_request" name="Send guide allocation request">
+          <bpmn:incoming>Flow_S_alloc_start_S_request</bpmn:incoming>
+          <bpmn:incoming>Flow_S_request_backoff_S_request</bpmn:incoming>
+          <bpmn:outgoing>Flow_S_request_S_accept</bpmn:outgoing>
+        </bpmn:sendTask>
+        <bpmn:userTask id="S_accept" name="Guide accepts or declines">
+          <bpmn:incoming>Flow_S_request_S_accept</bpmn:incoming>
+          <bpmn:incoming>Flow_S_request_manual_gate_S_accept</bpmn:incoming>
+          <bpmn:outgoing>Flow_S_accept_S_accept_gate</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:exclusiveGateway id="S_accept_gate" name="Guide outcome" default="Flow_S_accept_gate_S_declined_error">
+          <bpmn:incoming>Flow_S_accept_S_accept_gate</bpmn:incoming>
+          <bpmn:outgoing>Flow_S_accept_gate_S_alloc_end</bpmn:outgoing>
+          <bpmn:outgoing>Flow_S_accept_gate_S_declined_error</bpmn:outgoing>
+          <bpmn:outgoing>Flow_S_accept_gate_S_agree_expectations</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:endEvent id="S_declined_error" name="Guide declined">
+          <bpmn:incoming>Flow_S_accept_gate_S_declined_error</bpmn:incoming>
+          <bpmn:incoming>Flow_S_silent_S_declined_error</bpmn:incoming>
+          <bpmn:incoming>Flow_S_terms_gate_S_declined_error</bpmn:incoming>
+          <bpmn:errorEventDefinition errorRef="student_project_err_GUIDE_DECLINED" />
+        </bpmn:endEvent>
+        <bpmn:endEvent id="S_alloc_end" name="Guide confirmed">
+          <bpmn:incoming>Flow_S_accept_gate_S_alloc_end</bpmn:incoming>
+          <bpmn:incoming>Flow_S_terms_gate_S_alloc_end</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_S_alloc_start_S_request" sourceRef="S_alloc_start" targetRef="S_request" />
+        <bpmn:sequenceFlow id="Flow_S_request_S_accept" sourceRef="S_request" targetRef="S_accept" />
+        <bpmn:sequenceFlow id="Flow_S_accept_S_accept_gate" sourceRef="S_accept" targetRef="S_accept_gate" />
+        <bpmn:sequenceFlow id="Flow_S_accept_gate_S_alloc_end" sourceRef="S_accept_gate" targetRef="S_alloc_end" name="Accept">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= guideDecision = "accept"</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="Flow_S_accept_gate_S_declined_error" sourceRef="S_accept_gate" targetRef="S_declined_error" name="Decline" />
+        <bpmn:boundaryEvent id="S_silent" name="Guide silent for three days" attachedToRef="S_accept" cancelActivity="true">
+          <bpmn:outgoing>Flow_S_silent_S_declined_error</bpmn:outgoing>
+          <bpmn:timerEventDefinition>
+            <bpmn:timeDuration>P3D</bpmn:timeDuration>
+          </bpmn:timerEventDefinition>
+        </bpmn:boundaryEvent>
+        <bpmn:sequenceFlow id="Flow_S_silent_S_declined_error" sourceRef="S_silent" targetRef="S_declined_error" />
+        <bpmn:boundaryEvent id="S_request_error" name="Technical failure" attachedToRef="S_request" cancelActivity="true">
+          <bpmn:outgoing>Flow_S_request_error_S_request_retry</bpmn:outgoing>
+          <bpmn:errorEventDefinition errorRef="student_project_err_TECHNICAL_FAILURE" />
+        </bpmn:boundaryEvent>
+        <bpmn:serviceTask id="S_request_retry" name="Count failed operation">
+          <bpmn:incoming>Flow_S_request_error_S_request_retry</bpmn:incoming>
+          <bpmn:outgoing>Flow_S_request_retry_S_request_retry_gate</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:exclusiveGateway id="S_request_retry_gate" name="Retry below three?" default="Flow_S_request_retry_gate_S_request_manual">
+          <bpmn:incoming>Flow_S_request_retry_S_request_retry_gate</bpmn:incoming>
+          <bpmn:outgoing>Flow_S_request_retry_gate_S_request_backoff</bpmn:outgoing>
+          <bpmn:outgoing>Flow_S_request_retry_gate_S_request_manual</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:intermediateCatchEvent id="S_request_backoff" name="Retry after one minute">
+          <bpmn:incoming>Flow_S_request_retry_gate_S_request_backoff</bpmn:incoming>
+          <bpmn:outgoing>Flow_S_request_backoff_S_request</bpmn:outgoing>
+          <bpmn:timerEventDefinition>
+            <bpmn:timeDuration>PT1M</bpmn:timeDuration>
+          </bpmn:timerEventDefinition>
+        </bpmn:intermediateCatchEvent>
+        <bpmn:userTask id="S_request_manual" name="Manual operation and confirmation">
+          <bpmn:incoming>Flow_S_request_retry_gate_S_request_manual</bpmn:incoming>
+          <bpmn:incoming>Flow_S_request_manual_gate_S_request_manual</bpmn:incoming>
+          <bpmn:outgoing>Flow_S_request_manual_S_request_manual_gate</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:exclusiveGateway id="S_request_manual_gate" name="Manual operation confirmed?" default="Flow_S_request_manual_gate_S_accept">
+          <bpmn:incoming>Flow_S_request_manual_S_request_manual_gate</bpmn:incoming>
+          <bpmn:outgoing>Flow_S_request_manual_gate_S_request_manual</bpmn:outgoing>
+          <bpmn:outgoing>Flow_S_request_manual_gate_S_accept</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:sequenceFlow id="Flow_S_request_error_S_request_retry" sourceRef="S_request_error" targetRef="S_request_retry" />
+        <bpmn:sequenceFlow id="Flow_S_request_retry_S_request_retry_gate" sourceRef="S_request_retry" targetRef="S_request_retry_gate" />
+        <bpmn:sequenceFlow id="Flow_S_request_retry_gate_S_request_backoff" sourceRef="S_request_retry_gate" targetRef="S_request_backoff" name="Retry">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= S_request_failures &lt; 3</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="Flow_S_request_backoff_S_request" sourceRef="S_request_backoff" targetRef="S_request" />
+        <bpmn:sequenceFlow id="Flow_S_request_retry_gate_S_request_manual" sourceRef="S_request_retry_gate" targetRef="S_request_manual" name="Manual fallback" />
+        <bpmn:sequenceFlow id="Flow_S_request_manual_S_request_manual_gate" sourceRef="S_request_manual" targetRef="S_request_manual_gate" />
+        <bpmn:sequenceFlow id="Flow_S_request_manual_gate_S_request_manual" sourceRef="S_request_manual_gate" targetRef="S_request_manual" name="Not yet">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= manualOperationDone = "no"</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="Flow_S_request_manual_gate_S_accept" sourceRef="S_request_manual_gate" targetRef="S_accept" name="Confirmed" />
+        <bpmn:userTask id="S_agree_expectations" name="Discuss Guide Conditions with Team">
+          <bpmn:incoming>Flow_S_accept_gate_S_agree_expectations</bpmn:incoming>
+          <bpmn:outgoing>Flow_S_agree_expectations_S_terms_gate</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:exclusiveGateway id="S_terms_gate" name="Team Accepts Conditions?" default="Flow_S_terms_gate_S_declined_error">
+          <bpmn:incoming>Flow_S_agree_expectations_S_terms_gate</bpmn:incoming>
+          <bpmn:outgoing>Flow_S_terms_gate_S_alloc_end</bpmn:outgoing>
+          <bpmn:outgoing>Flow_S_terms_gate_S_declined_error</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:sequenceFlow id="Flow_S_accept_gate_S_agree_expectations" sourceRef="S_accept_gate" targetRef="S_agree_expectations" name="Conditional acceptance">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= guideDecision = "conditional"</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="Flow_S_agree_expectations_S_terms_gate" sourceRef="S_agree_expectations" targetRef="S_terms_gate" />
+        <bpmn:sequenceFlow id="Flow_S_terms_gate_S_alloc_end" sourceRef="S_terms_gate" targetRef="S_alloc_end" name="Agreed">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= conditionsAccepted = true</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="Flow_S_terms_gate_S_declined_error" sourceRef="S_terms_gate" targetRef="S_declined_error" name="Not agreed" />
+      </bpmn:subProcess>
+      <bpmn:boundaryEvent id="S_decline_catch" name="Decline or silence" attachedToRef="S_allocation" cancelActivity="true">
+        <bpmn:outgoing>Flow_S_decline_catch_S_release_decline</bpmn:outgoing>
+        <bpmn:errorEventDefinition errorRef="student_project_err_GUIDE_DECLINED" />
+      </bpmn:boundaryEvent>
+      <bpmn:serviceTask id="S_release_decline" name="Release declined guide and exclude guide">
+        <bpmn:incoming>Flow_S_decline_catch_S_release_decline</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_release_decline_S_attempt_gate</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="S_attempt_gate" name="Three allocation attempts reached?" default="Flow_S_attempt_gate_S_guide_rule">
+        <bpmn:incoming>Flow_S_release_decline_S_attempt_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_attempt_gate_S_manual</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_attempt_gate_S_guide_rule</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="S_finalize" name="Record accepted allocation">
+        <bpmn:incoming>Flow_S_allocation_S_finalize</bpmn:incoming>
+        <bpmn:incoming>Flow_S_finalize_backoff_S_finalize</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_finalize_S_notify</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sendTask id="S_notify" name="Notify student of confirmed allocation">
+        <bpmn:incoming>Flow_S_finalize_S_notify</bpmn:incoming>
+        <bpmn:incoming>Flow_S_finalize_manual_gate_S_notify</bpmn:incoming>
+        <bpmn:incoming>Flow_S_notify_backoff_S_notify</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_notify_S_allocated</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:boundaryEvent id="S_finalize_error" name="Technical failure" attachedToRef="S_finalize" cancelActivity="true">
+        <bpmn:outgoing>Flow_S_finalize_error_S_finalize_retry</bpmn:outgoing>
+        <bpmn:errorEventDefinition errorRef="student_project_err_TECHNICAL_FAILURE" />
+      </bpmn:boundaryEvent>
+      <bpmn:serviceTask id="S_finalize_retry" name="Count failed operation">
+        <bpmn:incoming>Flow_S_finalize_error_S_finalize_retry</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_finalize_retry_S_finalize_retry_gate</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="S_finalize_retry_gate" name="Retry below three?" default="Flow_S_finalize_retry_gate_S_finalize_manual">
+        <bpmn:incoming>Flow_S_finalize_retry_S_finalize_retry_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_finalize_retry_gate_S_finalize_backoff</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_finalize_retry_gate_S_finalize_manual</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:intermediateCatchEvent id="S_finalize_backoff" name="Retry after one minute">
+        <bpmn:incoming>Flow_S_finalize_retry_gate_S_finalize_backoff</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_finalize_backoff_S_finalize</bpmn:outgoing>
+        <bpmn:timerEventDefinition>
+          <bpmn:timeDuration>PT1M</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:intermediateCatchEvent>
+      <bpmn:userTask id="S_finalize_manual" name="Manual operation and confirmation">
+        <bpmn:incoming>Flow_S_finalize_retry_gate_S_finalize_manual</bpmn:incoming>
+        <bpmn:incoming>Flow_S_finalize_manual_gate_S_finalize_manual</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_finalize_manual_S_finalize_manual_gate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="S_finalize_manual_gate" name="Manual operation confirmed?" default="Flow_S_finalize_manual_gate_S_notify">
+        <bpmn:incoming>Flow_S_finalize_manual_S_finalize_manual_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_finalize_manual_gate_S_finalize_manual</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_finalize_manual_gate_S_notify</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:boundaryEvent id="S_notify_error" name="Technical failure" attachedToRef="S_notify" cancelActivity="true">
+        <bpmn:outgoing>Flow_S_notify_error_S_notify_retry</bpmn:outgoing>
+        <bpmn:errorEventDefinition errorRef="student_project_err_TECHNICAL_FAILURE" />
+      </bpmn:boundaryEvent>
+      <bpmn:serviceTask id="S_notify_retry" name="Count failed operation">
+        <bpmn:incoming>Flow_S_notify_error_S_notify_retry</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_notify_retry_S_notify_retry_gate</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="S_notify_retry_gate" name="Retry below three?" default="Flow_S_notify_retry_gate_S_notify_manual">
+        <bpmn:incoming>Flow_S_notify_retry_S_notify_retry_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_notify_retry_gate_S_notify_backoff</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_notify_retry_gate_S_notify_manual</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:intermediateCatchEvent id="S_notify_backoff" name="Retry after one minute">
+        <bpmn:incoming>Flow_S_notify_retry_gate_S_notify_backoff</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_notify_backoff_S_notify</bpmn:outgoing>
+        <bpmn:timerEventDefinition>
+          <bpmn:timeDuration>PT1M</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:intermediateCatchEvent>
+      <bpmn:userTask id="S_notify_manual" name="Manual operation and confirmation">
+        <bpmn:incoming>Flow_S_notify_retry_gate_S_notify_manual</bpmn:incoming>
+        <bpmn:incoming>Flow_S_notify_manual_gate_S_notify_manual</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_notify_manual_S_notify_manual_gate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="S_notify_manual_gate" name="Manual operation confirmed?" default="Flow_S_notify_manual_gate_S_allocated">
+        <bpmn:incoming>Flow_S_notify_manual_S_notify_manual_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_notify_manual_gate_S_notify_manual</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_notify_manual_gate_S_allocated</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:boundaryEvent id="S_reserve_error" name="Technical failure" attachedToRef="S_reserve" cancelActivity="true">
+        <bpmn:outgoing>Flow_S_reserve_error_S_reserve_retry</bpmn:outgoing>
+        <bpmn:errorEventDefinition errorRef="student_project_err_TECHNICAL_FAILURE" />
+      </bpmn:boundaryEvent>
+      <bpmn:serviceTask id="S_reserve_retry" name="Count failed operation">
+        <bpmn:incoming>Flow_S_reserve_error_S_reserve_retry</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_reserve_retry_S_reserve_retry_gate</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="S_reserve_retry_gate" name="Retry below three?" default="Flow_S_reserve_retry_gate_S_reserve_manual">
+        <bpmn:incoming>Flow_S_reserve_retry_S_reserve_retry_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_reserve_retry_gate_S_reserve_backoff</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_reserve_retry_gate_S_reserve_manual</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:intermediateCatchEvent id="S_reserve_backoff" name="Retry after one minute">
+        <bpmn:incoming>Flow_S_reserve_retry_gate_S_reserve_backoff</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_reserve_backoff_S_reserve</bpmn:outgoing>
+        <bpmn:timerEventDefinition>
+          <bpmn:timeDuration>PT1M</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:intermediateCatchEvent>
+      <bpmn:userTask id="S_reserve_manual" name="Manual operation and confirmation">
+        <bpmn:incoming>Flow_S_reserve_retry_gate_S_reserve_manual</bpmn:incoming>
+        <bpmn:incoming>Flow_S_reserve_manual_gate_S_reserve_manual</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_reserve_manual_S_reserve_manual_gate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="S_reserve_manual_gate" name="Manual operation confirmed?" default="Flow_S_reserve_manual_gate_S_reserve">
+        <bpmn:incoming>Flow_S_reserve_manual_S_reserve_manual_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_reserve_manual_gate_S_reserve_manual</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_reserve_manual_gate_S_reserve</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="S_allocated" name="Project allocated">
+        <bpmn:incoming>Flow_S_notify_S_allocated</bpmn:incoming>
+        <bpmn:incoming>Flow_S_notify_manual_gate_S_allocated</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:startEvent id="S_post_start" name="Begin approved allocation">
+        <bpmn:outgoing>Flow_S_post_start_S_guide_rule</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:sequenceFlow id="Flow_S_post_start_S_guide_rule" sourceRef="S_post_start" targetRef="S_guide_rule" />
+      <bpmn:endEvent id="S_post_lapsed" name="Allocation closed as lapsed">
+        <bpmn:incoming>Flow_S_set_lapsed_S_post_lapsed</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:serviceTask id="S_set_lapsed" name="Set allocation lapsed outcome">
+        <bpmn:incoming>Flow_S_manual_gate_S_lapsed</bpmn:incoming>
+        <bpmn:incoming>Flow_S_wait_limit_S_lapsed</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_set_lapsed_S_post_lapsed</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_S_set_lapsed_S_post_lapsed" sourceRef="S_set_lapsed" targetRef="S_post_lapsed" />
+      <bpmn:sequenceFlow id="Flow_S_decline_catch_S_release_decline" sourceRef="S_decline_catch" targetRef="S_release_decline" />
+      <bpmn:sequenceFlow id="Flow_S_release_decline_S_attempt_gate" sourceRef="S_release_decline" targetRef="S_attempt_gate" />
+      <bpmn:sequenceFlow id="Flow_S_attempt_gate_S_manual" sourceRef="S_attempt_gate" targetRef="S_manual" name="Three attempts">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= guideAttempts &gt;= 3</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_attempt_gate_S_guide_rule" sourceRef="S_attempt_gate" targetRef="S_guide_rule" name="Retry" />
+      <bpmn:sequenceFlow id="Flow_S_allocation_S_finalize" sourceRef="S_allocation" targetRef="S_finalize" />
+      <bpmn:sequenceFlow id="Flow_S_finalize_S_notify" sourceRef="S_finalize" targetRef="S_notify" />
+      <bpmn:sequenceFlow id="Flow_S_notify_S_allocated" sourceRef="S_notify" targetRef="S_allocated" />
+      <bpmn:sequenceFlow id="Flow_S_finalize_error_S_finalize_retry" sourceRef="S_finalize_error" targetRef="S_finalize_retry" />
+      <bpmn:sequenceFlow id="Flow_S_finalize_retry_S_finalize_retry_gate" sourceRef="S_finalize_retry" targetRef="S_finalize_retry_gate" />
+      <bpmn:sequenceFlow id="Flow_S_finalize_retry_gate_S_finalize_backoff" sourceRef="S_finalize_retry_gate" targetRef="S_finalize_backoff" name="Retry">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= S_finalize_failures &lt; 3</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_finalize_backoff_S_finalize" sourceRef="S_finalize_backoff" targetRef="S_finalize" />
+      <bpmn:sequenceFlow id="Flow_S_finalize_retry_gate_S_finalize_manual" sourceRef="S_finalize_retry_gate" targetRef="S_finalize_manual" name="Manual fallback" />
+      <bpmn:sequenceFlow id="Flow_S_finalize_manual_S_finalize_manual_gate" sourceRef="S_finalize_manual" targetRef="S_finalize_manual_gate" />
+      <bpmn:sequenceFlow id="Flow_S_finalize_manual_gate_S_finalize_manual" sourceRef="S_finalize_manual_gate" targetRef="S_finalize_manual" name="Not yet">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= manualOperationDone = "no"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_finalize_manual_gate_S_notify" sourceRef="S_finalize_manual_gate" targetRef="S_notify" name="Confirmed" />
+      <bpmn:sequenceFlow id="Flow_S_notify_error_S_notify_retry" sourceRef="S_notify_error" targetRef="S_notify_retry" />
+      <bpmn:sequenceFlow id="Flow_S_notify_retry_S_notify_retry_gate" sourceRef="S_notify_retry" targetRef="S_notify_retry_gate" />
+      <bpmn:sequenceFlow id="Flow_S_notify_retry_gate_S_notify_backoff" sourceRef="S_notify_retry_gate" targetRef="S_notify_backoff" name="Retry">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= S_notify_failures &lt; 3</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_notify_backoff_S_notify" sourceRef="S_notify_backoff" targetRef="S_notify" />
+      <bpmn:sequenceFlow id="Flow_S_notify_retry_gate_S_notify_manual" sourceRef="S_notify_retry_gate" targetRef="S_notify_manual" name="Manual fallback" />
+      <bpmn:sequenceFlow id="Flow_S_notify_manual_S_notify_manual_gate" sourceRef="S_notify_manual" targetRef="S_notify_manual_gate" />
+      <bpmn:sequenceFlow id="Flow_S_notify_manual_gate_S_notify_manual" sourceRef="S_notify_manual_gate" targetRef="S_notify_manual" name="Not yet">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= manualOperationDone = "no"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_notify_manual_gate_S_allocated" sourceRef="S_notify_manual_gate" targetRef="S_allocated" name="Confirmed" />
+      <bpmn:sequenceFlow id="Flow_S_reserve_error_S_reserve_retry" sourceRef="S_reserve_error" targetRef="S_reserve_retry" />
+      <bpmn:sequenceFlow id="Flow_S_reserve_retry_S_reserve_retry_gate" sourceRef="S_reserve_retry" targetRef="S_reserve_retry_gate" />
+      <bpmn:sequenceFlow id="Flow_S_reserve_retry_gate_S_reserve_backoff" sourceRef="S_reserve_retry_gate" targetRef="S_reserve_backoff" name="Retry">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= S_reserve_failures &lt; 3</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_reserve_backoff_S_reserve" sourceRef="S_reserve_backoff" targetRef="S_reserve" />
+      <bpmn:sequenceFlow id="Flow_S_reserve_retry_gate_S_reserve_manual" sourceRef="S_reserve_retry_gate" targetRef="S_reserve_manual" name="Manual fallback" />
+      <bpmn:sequenceFlow id="Flow_S_reserve_manual_S_reserve_manual_gate" sourceRef="S_reserve_manual" targetRef="S_reserve_manual_gate" />
+      <bpmn:sequenceFlow id="Flow_S_reserve_manual_gate_S_reserve_manual" sourceRef="S_reserve_manual_gate" targetRef="S_reserve_manual" name="Not yet">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= manualOperationDone = "no"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_reserve_manual_gate_S_reserve" sourceRef="S_reserve_manual_gate" targetRef="S_reserve" name="Confirmed" />
+      <bpmn:sequenceFlow id="Flow_S_guide_rule_S_guide_available" sourceRef="S_guide_rule" targetRef="S_guide_available" />
+      <bpmn:sequenceFlow id="Flow_S_guide_available_S_reserve" sourceRef="S_guide_available" targetRef="S_reserve" name="Available">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= guideAvailable = true</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_guide_available_S_manual" sourceRef="S_guide_available" targetRef="S_manual" name="None" />
+      <bpmn:sequenceFlow id="Flow_S_manual_S_manual_gate" sourceRef="S_manual" targetRef="S_manual_gate" />
+      <bpmn:sequenceFlow id="Flow_S_manual_gate_S_reserve" sourceRef="S_manual_gate" targetRef="S_reserve" name="Allocate">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= manualGuideDecision = "allocate"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_manual_gate_S_wait_limit" sourceRef="S_manual_gate" targetRef="S_wait_limit" name="Wait">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= manualGuideDecision = "wait"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_manual_gate_S_lapsed" sourceRef="S_manual_gate" targetRef="S_set_lapsed" name="Close" />
+      <bpmn:sequenceFlow id="Flow_S_wait_limit_S_wait_count" sourceRef="S_wait_limit" targetRef="S_wait_count" name="Wait">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= waitRounds &lt; 7</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_wait_limit_S_lapsed" sourceRef="S_wait_limit" targetRef="S_set_lapsed" name="Waiting exhausted" />
+      <bpmn:sequenceFlow id="Flow_S_wait_count_S_wait" sourceRef="S_wait_count" targetRef="S_wait" />
+      <bpmn:sequenceFlow id="Flow_S_wait_S_guide_rule" sourceRef="S_wait" targetRef="S_guide_rule" />
+      <bpmn:sequenceFlow id="Flow_S_reserve_S_allocation" sourceRef="S_reserve" targetRef="S_allocation" />
+      <bpmn:subProcess id="S_withdraw_handler" name="Withdrawal during allocation" triggeredByEvent="true">
+        <bpmn:laneSet id="S_withdraw_handler_lanes">
+          <bpmn:lane id="S_withdraw_handler_lane_0" name="Project Management System">
+            <bpmn:flowNodeRef>S_withdraw</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_compensate</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_withdraw_result</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_withdraw_end</bpmn:flowNodeRef>
+          </bpmn:lane>
+        </bpmn:laneSet>
+        <bpmn:startEvent id="S_withdraw" name="Team or guide withdrawal" isInterrupting="true">
+          <bpmn:outgoing>Flow_S_withdraw_S_compensate</bpmn:outgoing>
+          <bpmn:messageEventDefinition messageRef="student_project_msg_withdrawal" />
+        </bpmn:startEvent>
+        <bpmn:intermediateThrowEvent id="S_compensate" name="Compensate guide slot">
+          <bpmn:incoming>Flow_S_withdraw_S_compensate</bpmn:incoming>
+          <bpmn:outgoing>Flow_S_compensate_S_withdraw_result</bpmn:outgoing>
+          <bpmn:compensateEventDefinition activityRef="S_reserve" />
+        </bpmn:intermediateThrowEvent>
+        <bpmn:serviceTask id="S_withdraw_result" name="Record withdrawal and exclude leaving guide">
+          <bpmn:incoming>Flow_S_compensate_S_withdraw_result</bpmn:incoming>
+          <bpmn:outgoing>Flow_S_withdraw_result_S_withdraw_end</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:endEvent id="S_withdraw_end" name="Withdrawal handled">
+          <bpmn:incoming>Flow_S_withdraw_result_S_withdraw_end</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_S_withdraw_S_compensate" sourceRef="S_withdraw" targetRef="S_compensate" />
+        <bpmn:sequenceFlow id="Flow_S_compensate_S_withdraw_result" sourceRef="S_compensate" targetRef="S_withdraw_result" />
+        <bpmn:sequenceFlow id="Flow_S_withdraw_result_S_withdraw_end" sourceRef="S_withdraw_result" targetRef="S_withdraw_end" />
+      </bpmn:subProcess>
+      <bpmn:association id="Assoc_S_reserve" sourceRef="S_reserve_comp" targetRef="S_release" associationDirection="One" />
+    </bpmn:subProcess>
+    <bpmn:exclusiveGateway id="S_post_gate" name="Allocation Result" default="Flow_S_post_gate_S_lapsed">
+      <bpmn:incoming>Flow_S_post_approval_S_post_gate</bpmn:incoming>
+      <bpmn:outgoing>Flow_S_post_gate_S_success</bpmn:outgoing>
+      <bpmn:outgoing>Flow_S_post_gate_S_withdraw_notice</bpmn:outgoing>
+      <bpmn:outgoing>Flow_S_post_gate_S_post_approval</bpmn:outgoing>
+      <bpmn:outgoing>Flow_S_post_gate_S_lapsed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="S_success" name="Project allocated">
+      <bpmn:incoming>Flow_S_post_gate_S_success</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sendTask id="S_withdraw_notice" name="Notify withdrawn team">
+      <bpmn:incoming>Flow_S_post_gate_S_withdraw_notice</bpmn:incoming>
+      <bpmn:outgoing>Flow_S_withdraw_notice_S_withdrawn</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="S_withdrawn" name="Team withdrawn">
+      <bpmn:incoming>Flow_S_withdraw_notice_S_withdrawn</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_S_post_approval_S_post_gate" sourceRef="S_post_approval" targetRef="S_post_gate" />
+    <bpmn:sequenceFlow id="Flow_S_post_gate_S_success" sourceRef="S_post_gate" targetRef="S_success" name="Allocated">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= allocationOutcome = "allocated"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_S_post_gate_S_withdraw_notice" sourceRef="S_post_gate" targetRef="S_withdraw_notice" name="Team withdrawn">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= allocationOutcome = "withdrawn"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_S_withdraw_notice_S_withdrawn" sourceRef="S_withdraw_notice" targetRef="S_withdrawn" />
+    <bpmn:sequenceFlow id="Flow_S_post_gate_S_post_approval" sourceRef="S_post_gate" targetRef="S_post_approval" name="Guide left restart">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= allocationOutcome = "restart"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_S_post_gate_S_lapsed" sourceRef="S_post_gate" targetRef="S_lapsed" name="Lapsed" />
+    <bpmn:subProcess id="S_proposal" name="Submit and Review Proposal">
+      <bpmn:incoming>Flow_S_init_S_submit</bpmn:incoming>
+      <bpmn:outgoing>Flow_S_proposal_S_post_approval</bpmn:outgoing>
+      <bpmn:laneSet id="S_proposal_lanes">
+        <bpmn:lane id="S_proposal_lane_0" name="Project Management System">
+          <bpmn:flowNodeRef>S_sim_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_invalid</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_similarity</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_validation_limit</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_topic_limit</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_topic_count</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_revision_count</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_validate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_new_limit</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_late</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_valid</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_reject_notice</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_new_count</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_errors</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="S_proposal_lane_1" name="Student / Team">
+          <bpmn:flowNodeRef>S_deadline</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_new_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_revision_deadline</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_new_topic</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_revise</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_submit</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_proposal_exit_S_lapsed</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_proposal_exit_S_post_approval</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_proposal_exit_S_rejected</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_proposal_start</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_milestones</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_adjust_scope</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="S_proposal_lane_2" name="Review Committee including HoD">
+          <bpmn:flowNodeRef>S_force</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_hod_end</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_hod_notify</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_escalation_catch</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_force_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_revision_limit</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_review</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_committee_gate</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="S_proposal_lane_3" name="Project Coordinator">
+          <bpmn:flowNodeRef>S_screen</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_late_decision</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_match_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_screen_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_match</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_validation_resolution</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_late_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_validation_escalate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_resources</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_resource_gate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_recheck_resources</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_resource_result</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+      <bpmn:exclusiveGateway id="S_sim_gate" name="Similarity above threshold?" default="Flow_S_sim_gate_S_review">
+        <bpmn:incoming>Flow_S_similarity_S_sim_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_sim_gate_S_match</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_sim_gate_S_review</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:boundaryEvent id="S_deadline" name="Submission deadline" attachedToRef="S_submit" cancelActivity="true">
+        <bpmn:outgoing>Flow_S_deadline_S_late</bpmn:outgoing>
+        <bpmn:timerEventDefinition>
+          <bpmn:timeDuration>P7D</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:boundaryEvent>
+      <bpmn:endEvent id="S_invalid" name="Invalid team">
+        <bpmn:incoming>Flow_S_valid_S_invalid</bpmn:incoming>
+        <bpmn:errorEventDefinition errorRef="student_project_err_INVALID_TEAM" />
+      </bpmn:endEvent>
+      <bpmn:serviceTask id="S_similarity" name="Check duplicate and similarity score">
+        <bpmn:incoming>Flow_S_resource_gate_S_similarity</bpmn:incoming>
+        <bpmn:incoming>Flow_S_resource_result_S_similarity</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_similarity_S_sim_gate</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:userTask id="S_force" name="Final committee approve or reject">
+        <bpmn:incoming>Flow_S_revision_limit_S_force</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_force_S_force_gate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="S_validation_limit" name="Attempts below two?" default="Flow_S_validation_limit_S_validation_escalate">
+        <bpmn:incoming>Flow_S_valid_S_validation_limit</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_validation_limit_S_errors</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_validation_limit_S_validation_escalate</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="S_hod_end" name="HoD informed">
+        <bpmn:incoming>Flow_S_hod_notify_S_hod_end</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:exclusiveGateway id="S_topic_limit" name="Topic modifications below two?" default="Flow_S_topic_limit_S_reject_notice">
+        <bpmn:incoming>Flow_S_match_gate_S_topic_limit</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_topic_limit_S_topic_count</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_topic_limit_S_reject_notice</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="S_new_gate" name="New topic decision" default="Flow_S_new_gate_S_rejected">
+        <bpmn:incoming>Flow_S_new_topic_S_new_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_new_gate_S_new_count</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_new_gate_S_rejected</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="S_topic_count" name="Count topic modification">
+        <bpmn:incoming>Flow_S_topic_limit_S_topic_count</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_topic_count_S_submit</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:boundaryEvent id="S_revision_deadline" name="Seven day revision deadline" attachedToRef="S_revise" cancelActivity="true">
+        <bpmn:outgoing>Flow_S_revision_deadline_S_lapsed</bpmn:outgoing>
+        <bpmn:timerEventDefinition>
+          <bpmn:timeDuration>P7D</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:boundaryEvent>
+      <bpmn:serviceTask id="S_revision_count" name="Arrange Mentoring Meeting and Count Revision">
+        <bpmn:incoming>Flow_S_revision_limit_S_revision_count</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_revision_count_S_revise</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:userTask id="S_screen" name="Screen proposal">
+        <bpmn:incoming>Flow_S_valid_S_screen</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_screen_S_screen_gate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:businessRuleTask id="S_validate" name="Validate fields and team rules">
+        <bpmn:incoming>Flow_S_submit_S_validate</bpmn:incoming>
+        <bpmn:incoming>Flow_S_revise_S_validate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_validate_S_valid</bpmn:outgoing>
+      </bpmn:businessRuleTask>
+      <bpmn:sendTask id="S_hod_notify" name="Send HoD escalation record">
+        <bpmn:incoming>Flow_S_escalation_catch_S_hod_notify</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_hod_notify_S_hod_end</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:exclusiveGateway id="S_new_limit" name="One new topic available?" default="Flow_S_new_limit_S_rejected">
+        <bpmn:incoming>Flow_S_reject_notice_S_new_limit</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_new_limit_S_new_topic</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_new_limit_S_rejected</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:sendTask id="S_late" name="Flag and notify late submission">
+        <bpmn:incoming>Flow_S_deadline_S_late</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_late_S_late_decision</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:boundaryEvent id="S_escalation_catch" name="HoD receives escalation" attachedToRef="S_review" cancelActivity="false">
+        <bpmn:outgoing>Flow_S_escalation_catch_S_hod_notify</bpmn:outgoing>
+        <bpmn:escalationEventDefinition escalationRef="S_REVIEW_DELAY" />
+      </bpmn:boundaryEvent>
+      <bpmn:exclusiveGateway id="S_valid" name="Validation outcome" default="Flow_S_valid_S_screen">
+        <bpmn:incoming>Flow_S_validate_S_valid</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_valid_S_invalid</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_valid_S_validation_limit</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_valid_S_screen</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="S_new_topic" name="Submit one new topic?">
+        <bpmn:incoming>Flow_S_new_limit_S_new_topic</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_new_topic_S_new_gate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="S_late_decision" name="Approve late submission?">
+        <bpmn:incoming>Flow_S_late_S_late_decision</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_late_decision_S_late_gate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:sendTask id="S_reject_notice" name="Send rejection reasons">
+        <bpmn:incoming>Flow_S_validation_resolution_S_reject_notice</bpmn:incoming>
+        <bpmn:incoming>Flow_S_screen_gate_S_reject_notice</bpmn:incoming>
+        <bpmn:incoming>Flow_S_match_gate_S_reject_notice</bpmn:incoming>
+        <bpmn:incoming>Flow_S_topic_limit_S_reject_notice</bpmn:incoming>
+        <bpmn:incoming>Flow_S_committee_gate_S_reject_notice</bpmn:incoming>
+        <bpmn:incoming>Flow_S_force_gate_S_reject_notice</bpmn:incoming>
+        <bpmn:incoming>Flow_S_resource_gate_S_reject_notice</bpmn:incoming>
+        <bpmn:incoming>Flow_S_resource_result_S_reject_notice</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_reject_notice_S_new_limit</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:exclusiveGateway id="S_match_gate" name="Match decision" default="Flow_S_match_gate_S_reject_notice">
+        <bpmn:incoming>Flow_S_match_S_match_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_match_gate_S_review</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_match_gate_S_topic_limit</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_match_gate_S_reject_notice</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="S_screen_gate" name="Screen result" default="Flow_S_screen_gate_S_reject_notice">
+        <bpmn:incoming>Flow_S_screen_S_screen_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_screen_gate_S_similarity</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_screen_gate_S_reject_notice</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="S_force_gate" name="Final decision" default="Flow_S_force_gate_S_reject_notice">
+        <bpmn:incoming>Flow_S_force_S_force_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_force_gate_S_guide_rule</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_force_gate_S_reject_notice</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="S_revision_limit" name="Revision cycles below two?" default="Flow_S_revision_limit_S_force">
+        <bpmn:incoming>Flow_S_committee_gate_S_revision_limit</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_revision_limit_S_revision_count</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_revision_limit_S_force</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="S_revise" name="Revise Scope with Coordinator Guidance">
+        <bpmn:incoming>Flow_S_revision_count_S_revise</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_revise_S_validate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="S_match" name="Review duplicate match">
+        <bpmn:incoming>Flow_S_sim_gate_S_match</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_match_S_match_gate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:serviceTask id="S_new_count" name="Reset counters for one new topic">
+        <bpmn:incoming>Flow_S_new_gate_S_new_count</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_new_count_S_submit</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:subProcess id="S_review" name="Committee review with SLA">
+        <bpmn:incoming>Flow_S_milestones_S_review</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_review_S_committee_gate</bpmn:outgoing>
+        <bpmn:laneSet id="S_review_lanes">
+          <bpmn:lane id="S_review_lane_0" name="Review Committee including HoD">
+            <bpmn:flowNodeRef>S_review_start</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_committee</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_review_end</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_reminder_timer</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_hod_timer</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_escalate</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_escalate_end</bpmn:flowNodeRef>
+          </bpmn:lane>
+          <bpmn:lane id="S_review_lane_1" name="Project Management System">
+            <bpmn:flowNodeRef>S_remind</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_remind_end</bpmn:flowNodeRef>
+          </bpmn:lane>
+        </bpmn:laneSet>
+        <bpmn:startEvent id="S_review_start" name="Review starts">
+          <bpmn:outgoing>Flow_S_review_start_S_committee</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:userTask id="S_committee" name="Evaluate proposal">
+          <bpmn:incoming>Flow_S_review_start_S_committee</bpmn:incoming>
+          <bpmn:outgoing>Flow_S_committee_S_review_end</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:endEvent id="S_review_end" name="Decision captured">
+          <bpmn:incoming>Flow_S_committee_S_review_end</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_S_review_start_S_committee" sourceRef="S_review_start" targetRef="S_committee" />
+        <bpmn:sequenceFlow id="Flow_S_committee_S_review_end" sourceRef="S_committee" targetRef="S_review_end" />
+        <bpmn:boundaryEvent id="S_reminder_timer" name="Review reminder after 2 days" attachedToRef="S_committee" cancelActivity="false">
+          <bpmn:outgoing>Flow_S_reminder_timer_S_remind</bpmn:outgoing>
+          <bpmn:timerEventDefinition>
+            <bpmn:timeDuration>P2D</bpmn:timeDuration>
+          </bpmn:timerEventDefinition>
+        </bpmn:boundaryEvent>
+        <bpmn:sendTask id="S_remind" name="Send committee reminder">
+          <bpmn:incoming>Flow_S_reminder_timer_S_remind</bpmn:incoming>
+          <bpmn:outgoing>Flow_S_remind_S_remind_end</bpmn:outgoing>
+        </bpmn:sendTask>
+        <bpmn:endEvent id="S_remind_end" name="Reminder sent">
+          <bpmn:incoming>Flow_S_remind_S_remind_end</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_S_reminder_timer_S_remind" sourceRef="S_reminder_timer" targetRef="S_remind" />
+        <bpmn:sequenceFlow id="Flow_S_remind_S_remind_end" sourceRef="S_remind" targetRef="S_remind_end" />
+        <bpmn:boundaryEvent id="S_hod_timer" name="Escalate after 4 days" attachedToRef="S_committee" cancelActivity="false">
+          <bpmn:outgoing>Flow_S_hod_timer_S_escalate</bpmn:outgoing>
+          <bpmn:timerEventDefinition>
+            <bpmn:timeDuration>P4D</bpmn:timeDuration>
+          </bpmn:timerEventDefinition>
+        </bpmn:boundaryEvent>
+        <bpmn:intermediateThrowEvent id="S_escalate" name="Raise HoD escalation">
+          <bpmn:incoming>Flow_S_hod_timer_S_escalate</bpmn:incoming>
+          <bpmn:outgoing>Flow_S_escalate_S_escalate_end</bpmn:outgoing>
+          <bpmn:escalationEventDefinition escalationRef="S_REVIEW_DELAY" />
+        </bpmn:intermediateThrowEvent>
+        <bpmn:endEvent id="S_escalate_end" name="Escalation raised">
+          <bpmn:incoming>Flow_S_escalate_S_escalate_end</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_S_hod_timer_S_escalate" sourceRef="S_hod_timer" targetRef="S_escalate" />
+        <bpmn:sequenceFlow id="Flow_S_escalate_S_escalate_end" sourceRef="S_escalate" targetRef="S_escalate_end" />
+      </bpmn:subProcess>
+      <bpmn:userTask id="S_submit" name="Submit or correct proposal">
+        <bpmn:incoming>Flow_S_errors_S_submit</bpmn:incoming>
+        <bpmn:incoming>Flow_S_validation_resolution_S_submit</bpmn:incoming>
+        <bpmn:incoming>Flow_S_late_gate_S_submit</bpmn:incoming>
+        <bpmn:incoming>Flow_S_topic_count_S_submit</bpmn:incoming>
+        <bpmn:incoming>Flow_S_new_count_S_submit</bpmn:incoming>
+        <bpmn:incoming>Flow_S_proposal_start_S_submit</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_submit_S_validate</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:sendTask id="S_errors" name="Return field error list">
+        <bpmn:incoming>Flow_S_validation_limit_S_errors</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_errors_S_submit</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:exclusiveGateway id="S_validation_resolution" name="Coordinator resolution" default="Flow_S_validation_resolution_S_reject_notice">
+        <bpmn:incoming>Flow_S_validation_escalate_S_validation_resolution</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_validation_resolution_S_submit</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_validation_resolution_S_reject_notice</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="S_late_gate" name="Late permission" default="Flow_S_late_gate_S_lapsed">
+        <bpmn:incoming>Flow_S_late_decision_S_late_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_late_gate_S_submit</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_late_gate_S_lapsed</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="S_committee_gate" name="Committee outcome" default="Flow_S_committee_gate_S_reject_notice">
+        <bpmn:incoming>Flow_S_review_S_committee_gate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_committee_gate_S_guide_rule</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_committee_gate_S_revision_limit</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_committee_gate_S_reject_notice</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="S_validation_escalate" name="Resolve validation after two attempts">
+        <bpmn:incoming>Flow_S_validation_limit_S_validation_escalate</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_validation_escalate_S_validation_resolution</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:sequenceFlow id="Flow_S_escalation_catch_S_hod_notify" sourceRef="S_escalation_catch" targetRef="S_hod_notify" />
+      <bpmn:sequenceFlow id="Flow_S_hod_notify_S_hod_end" sourceRef="S_hod_notify" targetRef="S_hod_end" />
+      <bpmn:sequenceFlow id="Flow_S_submit_S_validate" sourceRef="S_submit" targetRef="S_validate" />
+      <bpmn:sequenceFlow id="Flow_S_validate_S_valid" sourceRef="S_validate" targetRef="S_valid" />
+      <bpmn:sequenceFlow id="Flow_S_valid_S_invalid" sourceRef="S_valid" targetRef="S_invalid" name="Invalid team">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= teamValid = false</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_valid_S_validation_limit" sourceRef="S_valid" targetRef="S_validation_limit" name="Invalid fields">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= teamValid = true and fieldsValid = false</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_valid_S_screen" sourceRef="S_valid" targetRef="S_screen" name="Valid" />
+      <bpmn:sequenceFlow id="Flow_S_validation_limit_S_errors" sourceRef="S_validation_limit" targetRef="S_errors" name="Correct">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= validationAttempts &lt; 2</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_validation_limit_S_validation_escalate" sourceRef="S_validation_limit" targetRef="S_validation_escalate" name="Escalate" />
+      <bpmn:sequenceFlow id="Flow_S_errors_S_submit" sourceRef="S_errors" targetRef="S_submit" />
+      <bpmn:sequenceFlow id="Flow_S_validation_escalate_S_validation_resolution" sourceRef="S_validation_escalate" targetRef="S_validation_resolution" />
+      <bpmn:sequenceFlow id="Flow_S_validation_resolution_S_submit" sourceRef="S_validation_resolution" targetRef="S_submit" name="Correct">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= validationResolution = "correct"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_validation_resolution_S_reject_notice" sourceRef="S_validation_resolution" targetRef="S_reject_notice" name="Reject" />
+      <bpmn:sequenceFlow id="Flow_S_deadline_S_late" sourceRef="S_deadline" targetRef="S_late" />
+      <bpmn:sequenceFlow id="Flow_S_late_S_late_decision" sourceRef="S_late" targetRef="S_late_decision" />
+      <bpmn:sequenceFlow id="Flow_S_late_decision_S_late_gate" sourceRef="S_late_decision" targetRef="S_late_gate" />
+      <bpmn:sequenceFlow id="Flow_S_late_gate_S_submit" sourceRef="S_late_gate" targetRef="S_submit" name="Allowed">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= lateDecision = "allow"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_late_gate_S_lapsed" sourceRef="S_late_gate" targetRef="S_proposal_exit_S_lapsed" name="Lapse" />
+      <bpmn:endEvent id="S_proposal_exit_S_lapsed" name="Proposal lapsed">
+        <bpmn:incoming>Flow_S_late_gate_S_lapsed</bpmn:incoming>
+        <bpmn:incoming>Flow_S_revision_deadline_S_lapsed</bpmn:incoming>
+        <bpmn:errorEventDefinition errorRef="student_project_err_EXIT_S_lapsed" />
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_S_screen_S_screen_gate" sourceRef="S_screen" targetRef="S_screen_gate" />
+      <bpmn:sequenceFlow id="Flow_S_screen_gate_S_similarity" sourceRef="S_screen_gate" targetRef="S_resources" name="Pass">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= screenDecision = "pass"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_screen_gate_S_reject_notice" sourceRef="S_screen_gate" targetRef="S_reject_notice" name="Reject" />
+      <bpmn:sequenceFlow id="Flow_S_similarity_S_sim_gate" sourceRef="S_similarity" targetRef="S_sim_gate" />
+      <bpmn:sequenceFlow id="Flow_S_sim_gate_S_match" sourceRef="S_sim_gate" targetRef="S_match" name="Match">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= similarityScore &gt; similarityThreshold</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_sim_gate_S_review" sourceRef="S_sim_gate" targetRef="S_milestones" name="Clear" />
+      <bpmn:sequenceFlow id="Flow_S_match_S_match_gate" sourceRef="S_match" targetRef="S_match_gate" />
+      <bpmn:sequenceFlow id="Flow_S_match_gate_S_review" sourceRef="S_match_gate" targetRef="S_milestones" name="Cleared">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= duplicateDecision = "clear"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_match_gate_S_topic_limit" sourceRef="S_match_gate" targetRef="S_topic_limit" name="Modify">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= duplicateDecision = "modify"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_match_gate_S_reject_notice" sourceRef="S_match_gate" targetRef="S_reject_notice" name="Reject" />
+      <bpmn:sequenceFlow id="Flow_S_topic_limit_S_topic_count" sourceRef="S_topic_limit" targetRef="S_topic_count" name="Modify">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= topicChanges &lt; 2</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_topic_limit_S_reject_notice" sourceRef="S_topic_limit" targetRef="S_reject_notice" name="Limit reached" />
+      <bpmn:sequenceFlow id="Flow_S_topic_count_S_submit" sourceRef="S_topic_count" targetRef="S_submit" />
+      <bpmn:sequenceFlow id="Flow_S_review_S_committee_gate" sourceRef="S_review" targetRef="S_committee_gate" />
+      <bpmn:sequenceFlow id="Flow_S_committee_gate_S_guide_rule" sourceRef="S_committee_gate" targetRef="S_proposal_exit_S_post_approval" name="Approved">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= committeeDecision = "approve"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:endEvent id="S_proposal_exit_S_post_approval" name="Approved">
+        <bpmn:incoming>Flow_S_committee_gate_S_guide_rule</bpmn:incoming>
+        <bpmn:incoming>Flow_S_force_gate_S_guide_rule</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_S_committee_gate_S_revision_limit" sourceRef="S_committee_gate" targetRef="S_revision_limit" name="Revise">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= committeeDecision = "revise"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_committee_gate_S_reject_notice" sourceRef="S_committee_gate" targetRef="S_reject_notice" name="Rejected" />
+      <bpmn:sequenceFlow id="Flow_S_revision_limit_S_revision_count" sourceRef="S_revision_limit" targetRef="S_revision_count" name="Revise">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= revisionCycles &lt; 2</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_revision_limit_S_force" sourceRef="S_revision_limit" targetRef="S_force" name="Final decision" />
+      <bpmn:sequenceFlow id="Flow_S_revision_count_S_revise" sourceRef="S_revision_count" targetRef="S_revise" />
+      <bpmn:sequenceFlow id="Flow_S_revise_S_validate" sourceRef="S_revise" targetRef="S_validate" />
+      <bpmn:sequenceFlow id="Flow_S_revision_deadline_S_lapsed" sourceRef="S_revision_deadline" targetRef="S_proposal_exit_S_lapsed" />
+      <bpmn:sequenceFlow id="Flow_S_force_S_force_gate" sourceRef="S_force" targetRef="S_force_gate" />
+      <bpmn:sequenceFlow id="Flow_S_force_gate_S_guide_rule" sourceRef="S_force_gate" targetRef="S_proposal_exit_S_post_approval" name="Approved">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= committeeDecision = "approve"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_force_gate_S_reject_notice" sourceRef="S_force_gate" targetRef="S_reject_notice" name="Rejected" />
+      <bpmn:sequenceFlow id="Flow_S_reject_notice_S_new_limit" sourceRef="S_reject_notice" targetRef="S_new_limit" />
+      <bpmn:sequenceFlow id="Flow_S_new_limit_S_new_topic" sourceRef="S_new_limit" targetRef="S_new_topic" name="One new topic">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= newTopics &lt; 1</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_new_limit_S_rejected" sourceRef="S_new_limit" targetRef="S_proposal_exit_S_rejected" name="No new topic left" />
+      <bpmn:endEvent id="S_proposal_exit_S_rejected" name="Proposal rejected">
+        <bpmn:incoming>Flow_S_new_limit_S_rejected</bpmn:incoming>
+        <bpmn:incoming>Flow_S_new_gate_S_rejected</bpmn:incoming>
+        <bpmn:errorEventDefinition errorRef="student_project_err_EXIT_S_rejected" />
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_S_new_topic_S_new_gate" sourceRef="S_new_topic" targetRef="S_new_gate" />
+      <bpmn:sequenceFlow id="Flow_S_new_gate_S_new_count" sourceRef="S_new_gate" targetRef="S_new_count" name="Yes">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= newTopicDecision = "yes"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_new_gate_S_rejected" sourceRef="S_new_gate" targetRef="S_proposal_exit_S_rejected" name="No" />
+      <bpmn:sequenceFlow id="Flow_S_new_count_S_submit" sourceRef="S_new_count" targetRef="S_submit" />
+      <bpmn:startEvent id="S_proposal_start" name="Start">
+        <bpmn:outgoing>Flow_S_proposal_start_S_submit</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:sequenceFlow id="Flow_S_proposal_start_S_submit" sourceRef="S_proposal_start" targetRef="S_submit" />
+      <bpmn:userTask id="S_milestones" name="Confirm Project Milestones">
+        <bpmn:incoming>Flow_S_sim_gate_S_review</bpmn:incoming>
+        <bpmn:incoming>Flow_S_match_gate_S_review</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_milestones_S_review</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:sequenceFlow id="Flow_S_milestones_S_review" sourceRef="S_milestones" targetRef="S_review" />
+      <bpmn:userTask id="S_resources" name="Check Required Resources">
+        <bpmn:incoming>Flow_S_screen_gate_S_similarity</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_resources_S_similarity</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:sequenceFlow id="Flow_S_resources_S_similarity" sourceRef="S_resources" targetRef="S_resource_gate" />
+      <bpmn:exclusiveGateway id="S_resource_gate" name="Resources Available?" default="Flow_S_resource_gate_S_reject_notice">
+        <bpmn:incoming>Flow_S_resources_S_similarity</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_resource_gate_S_similarity</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_resource_gate_S_adjust_scope</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_resource_gate_S_reject_notice</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="S_adjust_scope" name="Adapt Scope to Available Resources">
+        <bpmn:incoming>Flow_S_resource_gate_S_adjust_scope</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_adjust_scope_S_recheck_resources</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="S_recheck_resources" name="Review Adjusted Resource Plan">
+        <bpmn:incoming>Flow_S_adjust_scope_S_recheck_resources</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_recheck_resources_S_resource_result</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="S_resource_result" name="Adjusted Plan Feasible?" default="Flow_S_resource_result_S_reject_notice">
+        <bpmn:incoming>Flow_S_recheck_resources_S_resource_result</bpmn:incoming>
+        <bpmn:outgoing>Flow_S_resource_result_S_similarity</bpmn:outgoing>
+        <bpmn:outgoing>Flow_S_resource_result_S_reject_notice</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:sequenceFlow id="Flow_S_resource_gate_S_similarity" sourceRef="S_resource_gate" targetRef="S_similarity" name="Available">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= resourceDecision = "available"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_resource_gate_S_adjust_scope" sourceRef="S_resource_gate" targetRef="S_adjust_scope" name="Can adapt">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= resourceDecision = "adapt"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_resource_gate_S_reject_notice" sourceRef="S_resource_gate" targetRef="S_reject_notice" name="Not feasible" />
+      <bpmn:sequenceFlow id="Flow_S_adjust_scope_S_recheck_resources" sourceRef="S_adjust_scope" targetRef="S_recheck_resources" />
+      <bpmn:sequenceFlow id="Flow_S_recheck_resources_S_resource_result" sourceRef="S_recheck_resources" targetRef="S_resource_result" />
+      <bpmn:sequenceFlow id="Flow_S_resource_result_S_similarity" sourceRef="S_resource_result" targetRef="S_similarity" name="Feasible">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= resourcePlanFeasible = true</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_S_resource_result_S_reject_notice" sourceRef="S_resource_result" targetRef="S_reject_notice" name="Still not feasible" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="S_proposal_catch_S_lapsed" name="Proposal lapsed" attachedToRef="S_proposal" cancelActivity="true">
+      <bpmn:outgoing>Flow_S_proposal_catch_S_lapsed_S_lapsed</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="student_project_err_EXIT_S_lapsed" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_S_proposal_catch_S_lapsed_S_lapsed" sourceRef="S_proposal_catch_S_lapsed" targetRef="S_lapsed" />
+    <bpmn:sequenceFlow id="Flow_S_proposal_S_post_approval" sourceRef="S_proposal" targetRef="S_post_approval" />
+    <bpmn:boundaryEvent id="S_proposal_catch_S_rejected" name="Proposal rejected" attachedToRef="S_proposal" cancelActivity="true">
+      <bpmn:outgoing>Flow_S_proposal_catch_S_rejected_S_rejected</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="student_project_err_EXIT_S_rejected" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_S_proposal_catch_S_rejected_S_rejected" sourceRef="S_proposal_catch_S_rejected" targetRef="S_rejected" />
+  </bpmn:process>
+  <bpmn:collaboration id="student_project_collab">
+    <bpmn:participant id="student_project_pool" name="Assignment 1 - Student Project Approval and Allocation" processRef="student_project" />
+  </bpmn:collaboration>
+  <bpmn:error id="student_project_err_INVALID_TEAM" name="INVALID_TEAM" errorCode="INVALID_TEAM" />
+  <bpmn:escalation id="S_REVIEW_DELAY" name="Review delayed" escalationCode="REVIEW_DELAY" />
+  <bpmn:error id="student_project_err_GUIDE_DECLINED" name="GUIDE_DECLINED" errorCode="GUIDE_DECLINED" />
+  <bpmn:message id="student_project_msg_withdrawal" name="student_project.withdrawal">
+    </bpmn:message>
+  <bpmn:error id="student_project_err_TECHNICAL_FAILURE" name="TECHNICAL_FAILURE" errorCode="TECHNICAL_FAILURE" />
+  <bpmn:error id="student_project_err_EXIT_S_lapsed" name="EXIT_S_lapsed" errorCode="EXIT_S_lapsed" />
+  <bpmn:error id="student_project_err_EXIT_S_rejected" name="EXIT_S_rejected" errorCode="EXIT_S_rejected" />
+  <bpmndi:BPMNDiagram id="Diagram_student_project">
+    <bpmndi:BPMNPlane id="Plane_student_project" bpmnElement="student_project_collab">
+      <bpmndi:BPMNShape id="Shape_student_project_pool" bpmnElement="student_project_pool" isHorizontal="true">
+        <dc:Bounds x="20" y="50" width="2990.0" height="2460" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_student_project_lane_0" bpmnElement="student_project_lane_0" isHorizontal="true">
+        <dc:Bounds x="50" y="50" width="2960.0" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_student_project_lane_1" bpmnElement="student_project_lane_1" isHorizontal="true">
+        <dc:Bounds x="50" y="550" width="2960.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_student_project_lane_2" bpmnElement="student_project_lane_2" isHorizontal="true">
+        <dc:Bounds x="50" y="1370" width="2960.0" height="1140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_start" bpmnElement="S_start">
+        <dc:Bounds x="210.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_init" bpmnElement="S_init">
+        <dc:Bounds x="570.0" y="1460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_lapsed" bpmnElement="S_lapsed">
+        <dc:Bounds x="2410.0" y="1805.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2350.0" y="1853.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_rejected" bpmnElement="S_rejected">
+        <dc:Bounds x="1530.0" y="1805.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1470.0" y="1853.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_invalid_handler" bpmnElement="S_invalid_handler" isExpanded="false">
+        <dc:Bounds x="1890.0" y="960.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_post_approval" bpmnElement="S_post_approval" isExpanded="false">
+        <dc:Bounds x="1450.0" y="1460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_post_gate" bpmnElement="S_post_gate">
+        <dc:Bounds x="1963.0" y="1478.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1903.0" y="1540.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_success" bpmnElement="S_success">
+        <dc:Bounds x="2410.0" y="1485.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2350.0" y="1533.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_withdraw_notice" bpmnElement="S_withdraw_notice">
+        <dc:Bounds x="2330.0" y="2100.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_withdrawn" bpmnElement="S_withdrawn">
+        <dc:Bounds x="2850.0" y="2125.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2790.0" y="2173.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_proposal" bpmnElement="S_proposal" isExpanded="false">
+        <dc:Bounds x="1010.0" y="1460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_proposal_catch_S_lapsed" bpmnElement="S_proposal_catch_S_lapsed">
+        <dc:Bounds x="1028.0" y="1530.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="968.0" y="1578.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_proposal_catch_S_rejected" bpmnElement="S_proposal_catch_S_rejected">
+        <dc:Bounds x="1084.0" y="1530.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1024.0" y="1620.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_start_S_init" bpmnElement="Flow_S_start_S_init">
+        <di:waypoint x="250.0" y="185.0" />
+        <di:waypoint x="314.0" y="185.0" />
+        <di:waypoint x="314.0" y="1505.0" />
+        <di:waypoint x="570.0" y="1505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_init_S_submit" bpmnElement="Flow_S_init_S_submit">
+        <di:waypoint x="770.0" y="1505.0" />
+        <di:waypoint x="1010.0" y="1505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_post_approval_S_post_gate" bpmnElement="Flow_S_post_approval_S_post_gate">
+        <di:waypoint x="1650.0" y="1505.0" />
+        <di:waypoint x="1714.0" y="1505.0" />
+        <di:waypoint x="1714.0" y="1522.28" />
+        <di:waypoint x="1980.28" y="1522.28" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_post_gate_S_success" bpmnElement="Flow_S_post_gate_S_success">
+        <di:waypoint x="2017.0" y="1505.0" />
+        <di:waypoint x="2410.0" y="1505.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2086.0" y="1463.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_post_gate_S_withdraw_notice" bpmnElement="Flow_S_post_gate_S_withdraw_notice">
+        <di:waypoint x="1990.0" y="1478.0" />
+        <di:waypoint x="1990.0" y="1414.0" />
+        <di:waypoint x="2474.0" y="1414.0" />
+        <di:waypoint x="2474.0" y="2074.0" />
+        <di:waypoint x="2266.0" y="2074.0" />
+        <di:waypoint x="2266.0" y="2145.0" />
+        <di:waypoint x="2330.0" y="2145.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1991.1" y="1372.0" width="79.8" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_withdraw_notice_S_withdrawn" bpmnElement="Flow_S_withdraw_notice_S_withdrawn">
+        <di:waypoint x="2530.0" y="2145.0" />
+        <di:waypoint x="2850.0" y="2145.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_post_gate_S_post_approval" bpmnElement="Flow_S_post_gate_S_post_approval">
+        <di:waypoint x="1963.0" y="1505.0" />
+        <di:waypoint x="1899.0" y="1505.0" />
+        <di:waypoint x="1899.0" y="1461.0" />
+        <di:waypoint x="1670.0" y="1461.0" />
+        <di:waypoint x="1670.0" y="1614.0" />
+        <di:waypoint x="1550.0" y="1614.0" />
+        <di:waypoint x="1550.0" y="1550.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1782.4" y="1475.0" width="102.6" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_post_gate_S_lapsed" bpmnElement="Flow_S_post_gate_S_lapsed">
+        <di:waypoint x="1990.0" y="1532.0" />
+        <di:waypoint x="1990.0" y="1825.0" />
+        <di:waypoint x="2410.0" y="1825.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2004.0" y="1623.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_proposal_catch_S_lapsed_S_lapsed" bpmnElement="Flow_S_proposal_catch_S_lapsed_S_lapsed">
+        <di:waypoint x="1048.0" y="1570.0" />
+        <di:waypoint x="1048.0" y="1741.0" />
+        <di:waypoint x="2430.0" y="1741.0" />
+        <di:waypoint x="2430.0" y="1805.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_proposal_S_post_approval" bpmnElement="Flow_S_proposal_S_post_approval">
+        <di:waypoint x="1210.0" y="1505.0" />
+        <di:waypoint x="1450.0" y="1505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_proposal_catch_S_rejected_S_rejected" bpmnElement="Flow_S_proposal_catch_S_rejected_S_rejected">
+        <di:waypoint x="1104.0" y="1570.0" />
+        <di:waypoint x="1104.0" y="1634.0" />
+        <di:waypoint x="1550.0" y="1634.0" />
+        <di:waypoint x="1550.0" y="1805.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_S_invalid_handler">
+    <bpmndi:BPMNPlane id="Plane_S_invalid_handler" bpmnElement="S_invalid_handler">
+      <bpmndi:BPMNShape id="Shape_S_invalid_handler_lane_0" bpmnElement="S_invalid_handler_lane_0" isHorizontal="true">
+        <dc:Bounds x="50" y="50" width="1200.0" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_invalid_handler_lane_1" bpmnElement="S_invalid_handler_lane_1" isHorizontal="true">
+        <dc:Bounds x="50" y="550" width="1200.0" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_invalid_start" bpmnElement="S_invalid_start">
+        <dc:Bounds x="210.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_invalid_notify" bpmnElement="S_invalid_notify">
+        <dc:Bounds x="570.0" y="640.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_invalid_end" bpmnElement="S_invalid_end">
+        <dc:Bounds x="1090.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1030.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_invalid_start_S_invalid_notify" bpmnElement="Flow_S_invalid_start_S_invalid_notify">
+        <di:waypoint x="250.0" y="185.0" />
+        <di:waypoint x="314.0" y="185.0" />
+        <di:waypoint x="314.0" y="685.0" />
+        <di:waypoint x="570.0" y="685.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_invalid_notify_S_invalid_end" bpmnElement="Flow_S_invalid_notify_S_invalid_end">
+        <di:waypoint x="770.0" y="685.0" />
+        <di:waypoint x="834.0" y="685.0" />
+        <di:waypoint x="834.0" y="269.0" />
+        <di:waypoint x="1110.0" y="269.0" />
+        <di:waypoint x="1110.0" y="205.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_S_post_approval">
+    <bpmndi:BPMNPlane id="Plane_S_post_approval" bpmnElement="S_post_approval">
+      <bpmndi:BPMNShape id="Shape_S_post_approval_lane_0" bpmnElement="S_post_approval_lane_0" isHorizontal="true">
+        <dc:Bounds x="50" y="50" width="4727.0" height="2100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_post_approval_lane_1" bpmnElement="S_post_approval_lane_1" isHorizontal="true">
+        <dc:Bounds x="50" y="2150" width="4727.0" height="1140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_post_approval_lane_2" bpmnElement="S_post_approval_lane_2" isHorizontal="true">
+        <dc:Bounds x="50" y="3290" width="4727.0" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_guide_rule" bpmnElement="S_guide_rule">
+        <dc:Bounds x="570.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_guide_available" bpmnElement="S_guide_available">
+        <dc:Bounds x="1083.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1023.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_manual" bpmnElement="S_manual">
+        <dc:Bounds x="1450.0" y="2560.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_manual_gate" bpmnElement="S_manual_gate">
+        <dc:Bounds x="1963.0" y="2578.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1903.0" y="2640.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_wait" bpmnElement="S_wait">
+        <dc:Bounds x="3290.0" y="1765.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3230.0" y="1813.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_wait_limit" bpmnElement="S_wait_limit">
+        <dc:Bounds x="2403.0" y="1438.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2343.0" y="1500.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_wait_count" bpmnElement="S_wait_count">
+        <dc:Bounds x="2770.0" y="1740.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_reserve" bpmnElement="S_reserve">
+        <dc:Bounds x="1450.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_reserve_comp" bpmnElement="S_reserve_comp">
+        <dc:Bounds x="1468.0" y="210.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1408.0" y="258.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_release" bpmnElement="S_release">
+        <dc:Bounds x="1890.0" y="780.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_allocation" bpmnElement="S_allocation" isExpanded="false">
+        <dc:Bounds x="1890.0" y="3380.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_decline_catch" bpmnElement="S_decline_catch">
+        <dc:Bounds x="1908.0" y="3450.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1848.0" y="3498.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_release_decline" bpmnElement="S_release_decline">
+        <dc:Bounds x="2330.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_attempt_gate" bpmnElement="S_attempt_gate">
+        <dc:Bounds x="2843.0" y="798.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2783.0" y="860.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_finalize" bpmnElement="S_finalize">
+        <dc:Bounds x="2330.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_notify" bpmnElement="S_notify">
+        <dc:Bounds x="2770.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_finalize_error" bpmnElement="S_finalize_error">
+        <dc:Bounds x="2348.0" y="210.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2288.0" y="258.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_finalize_retry" bpmnElement="S_finalize_retry">
+        <dc:Bounds x="2770.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_finalize_retry_gate" bpmnElement="S_finalize_retry_gate">
+        <dc:Bounds x="3283.0" y="798.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3223.0" y="860.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_finalize_backoff" bpmnElement="S_finalize_backoff">
+        <dc:Bounds x="3730.0" y="805.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3670.0" y="853.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_finalize_manual" bpmnElement="S_finalize_manual">
+        <dc:Bounds x="3650.0" y="2880.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_finalize_manual_gate" bpmnElement="S_finalize_manual_gate">
+        <dc:Bounds x="4163.0" y="2898.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4103.0" y="2960.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_notify_error" bpmnElement="S_notify_error">
+        <dc:Bounds x="2788.0" y="210.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2728.0" y="258.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_notify_retry" bpmnElement="S_notify_retry">
+        <dc:Bounds x="3210.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_notify_retry_gate" bpmnElement="S_notify_retry_gate">
+        <dc:Bounds x="3723.0" y="478.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3663.0" y="540.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_notify_backoff" bpmnElement="S_notify_backoff">
+        <dc:Bounds x="4170.0" y="485.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4110.0" y="533.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_notify_manual" bpmnElement="S_notify_manual">
+        <dc:Bounds x="4090.0" y="2560.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_notify_manual_gate" bpmnElement="S_notify_manual_gate">
+        <dc:Bounds x="4603.0" y="2578.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4543.0" y="2640.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_reserve_error" bpmnElement="S_reserve_error">
+        <dc:Bounds x="1524.0" y="210.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1464.0" y="300.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_reserve_retry" bpmnElement="S_reserve_retry">
+        <dc:Bounds x="1890.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_reserve_retry_gate" bpmnElement="S_reserve_retry_gate">
+        <dc:Bounds x="2403.0" y="798.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2343.0" y="860.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_reserve_backoff" bpmnElement="S_reserve_backoff">
+        <dc:Bounds x="2850.0" y="1125.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2790.0" y="1173.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_reserve_manual" bpmnElement="S_reserve_manual">
+        <dc:Bounds x="2770.0" y="2880.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_reserve_manual_gate" bpmnElement="S_reserve_manual_gate">
+        <dc:Bounds x="3283.0" y="2898.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3223.0" y="2960.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_allocated" bpmnElement="S_allocated">
+        <dc:Bounds x="3290.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3230.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_post_start" bpmnElement="S_post_start">
+        <dc:Bounds x="210.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_post_lapsed" bpmnElement="S_post_lapsed">
+        <dc:Bounds x="2850.0" y="1445.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2790.0" y="1493.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_set_lapsed" bpmnElement="S_set_lapsed">
+        <dc:Bounds x="2330.0" y="1100.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_withdraw_handler" bpmnElement="S_withdraw_handler" isExpanded="false">
+        <dc:Bounds x="1890.0" y="1100.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_post_start_S_guide_rule" bpmnElement="Flow_S_post_start_S_guide_rule">
+        <di:waypoint x="250.0" y="185.0" />
+        <di:waypoint x="570.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_set_lapsed_S_post_lapsed" bpmnElement="Flow_S_set_lapsed_S_post_lapsed">
+        <di:waypoint x="2530.0" y="1145.0" />
+        <di:waypoint x="2594.0" y="1145.0" />
+        <di:waypoint x="2594.0" y="1381.0" />
+        <di:waypoint x="2870.0" y="1381.0" />
+        <di:waypoint x="2870.0" y="1445.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_decline_catch_S_release_decline" bpmnElement="Flow_S_decline_catch_S_release_decline">
+        <di:waypoint x="1928.0" y="3490.0" />
+        <di:waypoint x="1928.0" y="3554.0" />
+        <di:waypoint x="2198.0" y="3554.0" />
+        <di:waypoint x="2198.0" y="734.0" />
+        <di:waypoint x="2110.0" y="734.0" />
+        <di:waypoint x="2110.0" y="461.0" />
+        <di:waypoint x="2198.0" y="461.0" />
+        <di:waypoint x="2198.0" y="505.0" />
+        <di:waypoint x="2330.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_release_decline_S_attempt_gate" bpmnElement="Flow_S_release_decline_S_attempt_gate">
+        <di:waypoint x="2530.0" y="505.0" />
+        <di:waypoint x="2594.0" y="505.0" />
+        <di:waypoint x="2594.0" y="781.0" />
+        <di:waypoint x="2779.0" y="781.0" />
+        <di:waypoint x="2779.0" y="825.0" />
+        <di:waypoint x="2843.0" y="825.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_attempt_gate_S_manual" bpmnElement="Flow_S_attempt_gate_S_manual">
+        <di:waypoint x="2870.0" y="852.0" />
+        <di:waypoint x="2870.0" y="1017.0" />
+        <di:waypoint x="1550.0" y="1017.0" />
+        <di:waypoint x="1550.0" y="2560.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2884.0" y="943.0" width="79.8" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_attempt_gate_S_guide_rule" bpmnElement="Flow_S_attempt_gate_S_guide_rule">
+        <di:waypoint x="2870.0" y="798.0" />
+        <di:waypoint x="2870.0" y="734.0" />
+        <di:waypoint x="2638.0" y="734.0" />
+        <di:waypoint x="2638.0" y="896.0" />
+        <di:waypoint x="670.0" y="896.0" />
+        <di:waypoint x="670.0" y="230.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2793.0" y="692.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_allocation_S_finalize" bpmnElement="Flow_S_allocation_S_finalize">
+        <di:waypoint x="2090.0" y="3425.0" />
+        <di:waypoint x="2154.0" y="3425.0" />
+        <di:waypoint x="2154.0" y="185.0" />
+        <di:waypoint x="2330.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_finalize_S_notify" bpmnElement="Flow_S_finalize_S_notify">
+        <di:waypoint x="2530.0" y="185.0" />
+        <di:waypoint x="2770.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_notify_S_allocated" bpmnElement="Flow_S_notify_S_allocated">
+        <di:waypoint x="2970.0" y="185.0" />
+        <di:waypoint x="3290.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_finalize_error_S_finalize_retry" bpmnElement="Flow_S_finalize_error_S_finalize_retry">
+        <di:waypoint x="2368.0" y="250.0" />
+        <di:waypoint x="2368.0" y="314.0" />
+        <di:waypoint x="2706.0" y="314.0" />
+        <di:waypoint x="2706.0" y="505.0" />
+        <di:waypoint x="2770.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_finalize_retry_S_finalize_retry_gate" bpmnElement="Flow_S_finalize_retry_S_finalize_retry_gate">
+        <di:waypoint x="2970.0" y="505.0" />
+        <di:waypoint x="3034.0" y="505.0" />
+        <di:waypoint x="3034.0" y="734.0" />
+        <di:waypoint x="3310.0" y="734.0" />
+        <di:waypoint x="3310.0" y="798.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_finalize_retry_gate_S_finalize_backoff" bpmnElement="Flow_S_finalize_retry_gate_S_finalize_backoff">
+        <di:waypoint x="3337.0" y="825.0" />
+        <di:waypoint x="3730.0" y="825.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3406.0" y="783.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_finalize_backoff_S_finalize" bpmnElement="Flow_S_finalize_backoff_S_finalize">
+        <di:waypoint x="3750.0" y="805.0" />
+        <di:waypoint x="3750.0" y="690.0" />
+        <di:waypoint x="3078.0" y="690.0" />
+        <di:waypoint x="3078.0" y="358.0" />
+        <di:waypoint x="2750.0" y="358.0" />
+        <di:waypoint x="2750.0" y="270.0" />
+        <di:waypoint x="2430.0" y="270.0" />
+        <di:waypoint x="2430.0" y="230.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_finalize_retry_gate_S_finalize_manual" bpmnElement="Flow_S_finalize_retry_gate_S_finalize_manual">
+        <di:waypoint x="3310.0" y="852.0" />
+        <di:waypoint x="3310.0" y="916.0" />
+        <di:waypoint x="3586.0" y="916.0" />
+        <di:waypoint x="3586.0" y="2925.0" />
+        <di:waypoint x="3650.0" y="2925.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3338.25" y="930.0" width="85.5" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_finalize_manual_S_finalize_manual_gate" bpmnElement="Flow_S_finalize_manual_S_finalize_manual_gate">
+        <di:waypoint x="3850.0" y="2925.0" />
+        <di:waypoint x="3914.0" y="2925.0" />
+        <di:waypoint x="3914.0" y="2872.0" />
+        <di:waypoint x="4281.0" y="2872.0" />
+        <di:waypoint x="4281.0" y="2925.0" />
+        <di:waypoint x="4217.0" y="2925.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_finalize_manual_gate_S_finalize_manual" bpmnElement="Flow_S_finalize_manual_gate_S_finalize_manual">
+        <di:waypoint x="4163.0" y="2925.0" />
+        <di:waypoint x="4099.0" y="2925.0" />
+        <di:waypoint x="4099.0" y="3034.0" />
+        <di:waypoint x="3750.0" y="3034.0" />
+        <di:waypoint x="3750.0" y="2970.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4013.0" y="2952.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_finalize_manual_gate_S_notify" bpmnElement="Flow_S_finalize_manual_gate_S_notify">
+        <di:waypoint x="4190.0" y="2898.0" />
+        <di:waypoint x="4190.0" y="2834.0" />
+        <di:waypoint x="4070.0" y="2834.0" />
+        <di:waypoint x="4070.0" y="549.0" />
+        <di:waypoint x="4234.0" y="549.0" />
+        <di:waypoint x="4234.0" y="76.0" />
+        <di:waypoint x="2870.0" y="76.0" />
+        <di:waypoint x="2870.0" y="140.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4113.0" y="2792.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_notify_error_S_notify_retry" bpmnElement="Flow_S_notify_error_S_notify_retry">
+        <di:waypoint x="2808.0" y="250.0" />
+        <di:waypoint x="2808.0" y="314.0" />
+        <di:waypoint x="3146.0" y="314.0" />
+        <di:waypoint x="3146.0" y="505.0" />
+        <di:waypoint x="3210.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_notify_retry_S_notify_retry_gate" bpmnElement="Flow_S_notify_retry_S_notify_retry_gate">
+        <di:waypoint x="3410.0" y="505.0" />
+        <di:waypoint x="3723.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_notify_retry_gate_S_notify_backoff" bpmnElement="Flow_S_notify_retry_gate_S_notify_backoff">
+        <di:waypoint x="3777.0" y="505.0" />
+        <di:waypoint x="4170.0" y="505.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3846.0" y="463.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_notify_backoff_S_notify" bpmnElement="Flow_S_notify_backoff_S_notify">
+        <di:waypoint x="4190.0" y="485.0" />
+        <di:waypoint x="4190.0" y="270.0" />
+        <di:waypoint x="2870.0" y="270.0" />
+        <di:waypoint x="2870.0" y="230.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_notify_retry_gate_S_notify_manual" bpmnElement="Flow_S_notify_retry_gate_S_notify_manual">
+        <di:waypoint x="3750.0" y="532.0" />
+        <di:waypoint x="3750.0" y="596.0" />
+        <di:waypoint x="4026.0" y="596.0" />
+        <di:waypoint x="4026.0" y="2605.0" />
+        <di:waypoint x="4090.0" y="2605.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3748.25" y="610.0" width="85.5" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_notify_manual_S_notify_manual_gate" bpmnElement="Flow_S_notify_manual_S_notify_manual_gate">
+        <di:waypoint x="4290.0" y="2605.0" />
+        <di:waypoint x="4354.0" y="2605.0" />
+        <di:waypoint x="4354.0" y="2561.0" />
+        <di:waypoint x="4721.0" y="2561.0" />
+        <di:waypoint x="4721.0" y="2605.0" />
+        <di:waypoint x="4657.0" y="2605.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_notify_manual_gate_S_notify_manual" bpmnElement="Flow_S_notify_manual_gate_S_notify_manual">
+        <di:waypoint x="4603.0" y="2605.0" />
+        <di:waypoint x="4539.0" y="2605.0" />
+        <di:waypoint x="4539.0" y="2714.0" />
+        <di:waypoint x="4190.0" y="2714.0" />
+        <di:waypoint x="4190.0" y="2650.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4453.0" y="2632.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_notify_manual_gate_S_allocated" bpmnElement="Flow_S_notify_manual_gate_S_allocated">
+        <di:waypoint x="4630.0" y="2578.0" />
+        <di:waypoint x="4630.0" y="185.0" />
+        <di:waypoint x="3330.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4644.0" y="2459.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_reserve_error_S_reserve_retry" bpmnElement="Flow_S_reserve_error_S_reserve_retry">
+        <di:waypoint x="1544.0" y="250.0" />
+        <di:waypoint x="1544.0" y="505.0" />
+        <di:waypoint x="1890.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_reserve_retry_S_reserve_retry_gate" bpmnElement="Flow_S_reserve_retry_S_reserve_retry_gate">
+        <di:waypoint x="2090.0" y="505.0" />
+        <di:waypoint x="2198.0" y="505.0" />
+        <di:waypoint x="2198.0" y="734.0" />
+        <di:waypoint x="2430.0" y="734.0" />
+        <di:waypoint x="2430.0" y="798.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_reserve_retry_gate_S_reserve_backoff" bpmnElement="Flow_S_reserve_retry_gate_S_reserve_backoff">
+        <di:waypoint x="2457.0" y="825.0" />
+        <di:waypoint x="2764.0" y="825.0" />
+        <di:waypoint x="2764.0" y="1145.0" />
+        <di:waypoint x="2850.0" y="1145.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2526.0" y="839.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_reserve_backoff_S_reserve" bpmnElement="Flow_S_reserve_backoff_S_reserve">
+        <di:waypoint x="2870.0" y="1125.0" />
+        <di:waypoint x="2870.0" y="1061.0" />
+        <di:waypoint x="2242.0" y="1061.0" />
+        <di:waypoint x="2242.0" y="294.0" />
+        <di:waypoint x="1550.0" y="294.0" />
+        <di:waypoint x="1550.0" y="230.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_reserve_retry_gate_S_reserve_manual" bpmnElement="Flow_S_reserve_retry_gate_S_reserve_manual">
+        <di:waypoint x="2403.0" y="825.0" />
+        <di:waypoint x="2110.0" y="825.0" />
+        <di:waypoint x="2110.0" y="1512.0" />
+        <di:waypoint x="2037.0" y="1512.0" />
+        <di:waypoint x="2037.0" y="2816.0" />
+        <di:waypoint x="2870.0" y="2816.0" />
+        <di:waypoint x="2870.0" y="2880.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2336.25" y="739.0" width="85.5" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_reserve_manual_S_reserve_manual_gate" bpmnElement="Flow_S_reserve_manual_S_reserve_manual_gate">
+        <di:waypoint x="2970.0" y="2925.0" />
+        <di:waypoint x="3034.0" y="2925.0" />
+        <di:waypoint x="3034.0" y="2969.0" />
+        <di:waypoint x="3401.0" y="2969.0" />
+        <di:waypoint x="3401.0" y="2925.0" />
+        <di:waypoint x="3337.0" y="2925.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_reserve_manual_gate_S_reserve_manual" bpmnElement="Flow_S_reserve_manual_gate_S_reserve_manual">
+        <di:waypoint x="3283.0" y="2925.0" />
+        <di:waypoint x="3219.0" y="2925.0" />
+        <di:waypoint x="3219.0" y="3034.0" />
+        <di:waypoint x="2870.0" y="3034.0" />
+        <di:waypoint x="2870.0" y="2970.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3133.0" y="2927.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_reserve_manual_gate_S_reserve" bpmnElement="Flow_S_reserve_manual_gate_S_reserve">
+        <di:waypoint x="3310.0" y="2898.0" />
+        <di:waypoint x="3310.0" y="2740.0" />
+        <di:waypoint x="1670.0" y="2740.0" />
+        <di:waypoint x="1670.0" y="207.0" />
+        <di:waypoint x="1650.0" y="207.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3324.0" y="2779.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_guide_rule_S_guide_available" bpmnElement="Flow_S_guide_rule_S_guide_available">
+        <di:waypoint x="770.0" y="185.0" />
+        <di:waypoint x="1083.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_guide_available_S_reserve" bpmnElement="Flow_S_guide_available_S_reserve">
+        <di:waypoint x="1137.0" y="185.0" />
+        <di:waypoint x="1450.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1206.0" y="143.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_guide_available_S_manual" bpmnElement="Flow_S_guide_available_S_manual">
+        <di:waypoint x="1110.0" y="212.0" />
+        <di:waypoint x="1110.0" y="2605.0" />
+        <di:waypoint x="1450.0" y="2605.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1124.0" y="303.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_manual_S_manual_gate" bpmnElement="Flow_S_manual_S_manual_gate">
+        <di:waypoint x="1650.0" y="2605.0" />
+        <di:waypoint x="1882.0" y="2605.0" />
+        <di:waypoint x="1882.0" y="2696.0" />
+        <di:waypoint x="1990.0" y="2696.0" />
+        <di:waypoint x="1990.0" y="2632.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_manual_gate_S_reserve" bpmnElement="Flow_S_manual_gate_S_reserve">
+        <di:waypoint x="1963.0" y="2605.0" />
+        <di:waypoint x="1899.0" y="2605.0" />
+        <di:waypoint x="1899.0" y="1216.0" />
+        <di:waypoint x="1424.0" y="1216.0" />
+        <di:waypoint x="1424.0" y="120.0" />
+        <di:waypoint x="1550.0" y="120.0" />
+        <di:waypoint x="1550.0" y="140.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1813.0" y="2550.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_manual_gate_S_wait_limit" bpmnElement="Flow_S_manual_gate_S_wait_limit">
+        <di:waypoint x="2017.0" y="2605.0" />
+        <di:waypoint x="2081.0" y="2605.0" />
+        <di:waypoint x="2081.0" y="1556.0" />
+        <di:waypoint x="2430.0" y="1556.0" />
+        <di:waypoint x="2430.0" y="1492.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1909.0" y="2543.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_manual_gate_S_lapsed" bpmnElement="Flow_S_manual_gate_S_lapsed">
+        <di:waypoint x="1990.0" y="2578.0" />
+        <di:waypoint x="1990.0" y="1216.0" />
+        <di:waypoint x="2266.0" y="1216.0" />
+        <di:waypoint x="2266.0" y="1145.0" />
+        <di:waypoint x="2330.0" y="1145.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1904.0" y="2459.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_wait_limit_S_wait_count" bpmnElement="Flow_S_wait_limit_S_wait_count">
+        <di:waypoint x="2457.0" y="1465.0" />
+        <di:waypoint x="2521.0" y="1465.0" />
+        <di:waypoint x="2521.0" y="1785.0" />
+        <di:waypoint x="2770.0" y="1785.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2535.0" y="1492.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_wait_limit_S_lapsed" bpmnElement="Flow_S_wait_limit_S_lapsed">
+        <di:waypoint x="2430.0" y="1438.0" />
+        <di:waypoint x="2430.0" y="1190.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2444.0" y="1319.0" width="96.9" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_wait_count_S_wait" bpmnElement="Flow_S_wait_count_S_wait">
+        <di:waypoint x="2970.0" y="1785.0" />
+        <di:waypoint x="3290.0" y="1785.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_wait_S_guide_rule" bpmnElement="Flow_S_wait_S_guide_rule">
+        <di:waypoint x="3310.0" y="1765.0" />
+        <di:waypoint x="3310.0" y="940.0" />
+        <di:waypoint x="2286.0" y="940.0" />
+        <di:waypoint x="2286.0" y="226.0" />
+        <di:waypoint x="1758.0" y="226.0" />
+        <di:waypoint x="1758.0" y="76.0" />
+        <di:waypoint x="670.0" y="76.0" />
+        <di:waypoint x="670.0" y="140.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_reserve_S_allocation" bpmnElement="Flow_S_reserve_S_allocation">
+        <di:waypoint x="1650.0" y="185.0" />
+        <di:waypoint x="1714.0" y="185.0" />
+        <di:waypoint x="1714.0" y="3425.0" />
+        <di:waypoint x="1890.0" y="3425.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_S_reserve" bpmnElement="Assoc_S_reserve">
+        <di:waypoint x="1488.0" y="250.0" />
+        <di:waypoint x="1488.0" y="825.0" />
+        <di:waypoint x="1890.0" y="825.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_S_allocation">
+    <bpmndi:BPMNPlane id="Plane_S_allocation" bpmnElement="S_allocation">
+      <bpmndi:BPMNShape id="Shape_S_allocation_lane_0" bpmnElement="S_allocation_lane_0" isHorizontal="true">
+        <dc:Bounds x="50" y="50" width="2527.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_allocation_lane_1" bpmnElement="S_allocation_lane_1" isHorizontal="true">
+        <dc:Bounds x="50" y="870" width="2527.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_allocation_lane_2" bpmnElement="S_allocation_lane_2" isHorizontal="true">
+        <dc:Bounds x="50" y="1690" width="2527.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_alloc_start" bpmnElement="S_alloc_start">
+        <dc:Bounds x="210.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_request" bpmnElement="S_request">
+        <dc:Bounds x="570.0" y="960.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_accept" bpmnElement="S_accept">
+        <dc:Bounds x="1010.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_accept_gate" bpmnElement="S_accept_gate">
+        <dc:Bounds x="1523.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1463.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_declined_error" bpmnElement="S_declined_error">
+        <dc:Bounds x="1970.0" y="485.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1910.0" y="533.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_alloc_end" bpmnElement="S_alloc_end">
+        <dc:Bounds x="1970.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1910.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_silent" bpmnElement="S_silent">
+        <dc:Bounds x="1028.0" y="210.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="968.0" y="258.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_request_error" bpmnElement="S_request_error">
+        <dc:Bounds x="588.0" y="1030.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="528.0" y="1078.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_request_retry" bpmnElement="S_request_retry">
+        <dc:Bounds x="1010.0" y="1280.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_request_retry_gate" bpmnElement="S_request_retry_gate">
+        <dc:Bounds x="1523.0" y="1298.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1463.0" y="1360.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_request_backoff" bpmnElement="S_request_backoff">
+        <dc:Bounds x="1970.0" y="1305.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1910.0" y="1353.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_request_manual" bpmnElement="S_request_manual">
+        <dc:Bounds x="1890.0" y="2100.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_request_manual_gate" bpmnElement="S_request_manual_gate">
+        <dc:Bounds x="2403.0" y="2118.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2343.0" y="2180.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_alloc_start_S_request" bpmnElement="Flow_S_alloc_start_S_request">
+        <di:waypoint x="250.0" y="185.0" />
+        <di:waypoint x="314.0" y="185.0" />
+        <di:waypoint x="314.0" y="1005.0" />
+        <di:waypoint x="570.0" y="1005.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_request_S_accept" bpmnElement="Flow_S_request_S_accept">
+        <di:waypoint x="770.0" y="1005.0" />
+        <di:waypoint x="834.0" y="1005.0" />
+        <di:waypoint x="834.0" y="185.0" />
+        <di:waypoint x="1010.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_accept_S_accept_gate" bpmnElement="Flow_S_accept_S_accept_gate">
+        <di:waypoint x="1210.0" y="185.0" />
+        <di:waypoint x="1523.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_accept_gate_S_alloc_end" bpmnElement="Flow_S_accept_gate_S_alloc_end">
+        <di:waypoint x="1577.0" y="185.0" />
+        <di:waypoint x="1970.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1646.0" y="143.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_accept_gate_S_declined_error" bpmnElement="Flow_S_accept_gate_S_declined_error">
+        <di:waypoint x="1550.0" y="212.0" />
+        <di:waypoint x="1550.0" y="505.0" />
+        <di:waypoint x="1970.0" y="505.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1564.0" y="303.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_silent_S_declined_error" bpmnElement="Flow_S_silent_S_declined_error">
+        <di:waypoint x="1048.0" y="250.0" />
+        <di:waypoint x="1048.0" y="421.0" />
+        <di:waypoint x="1990.0" y="421.0" />
+        <di:waypoint x="1990.0" y="485.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_request_error_S_request_retry" bpmnElement="Flow_S_request_error_S_request_retry">
+        <di:waypoint x="608.0" y="1070.0" />
+        <di:waypoint x="608.0" y="1325.0" />
+        <di:waypoint x="1010.0" y="1325.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_request_retry_S_request_retry_gate" bpmnElement="Flow_S_request_retry_S_request_retry_gate">
+        <di:waypoint x="1210.0" y="1325.0" />
+        <di:waypoint x="1523.0" y="1325.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_request_retry_gate_S_request_backoff" bpmnElement="Flow_S_request_retry_gate_S_request_backoff">
+        <di:waypoint x="1577.0" y="1325.0" />
+        <di:waypoint x="1970.0" y="1325.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1646.0" y="1283.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_request_backoff_S_request" bpmnElement="Flow_S_request_backoff_S_request">
+        <di:waypoint x="1990.0" y="1305.0" />
+        <di:waypoint x="1990.0" y="1114.0" />
+        <di:waypoint x="670.0" y="1114.0" />
+        <di:waypoint x="670.0" y="1050.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_request_retry_gate_S_request_manual" bpmnElement="Flow_S_request_retry_gate_S_request_manual">
+        <di:waypoint x="1550.0" y="1352.0" />
+        <di:waypoint x="1550.0" y="2145.0" />
+        <di:waypoint x="1890.0" y="2145.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1564.0" y="1443.0" width="85.5" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_request_manual_S_request_manual_gate" bpmnElement="Flow_S_request_manual_S_request_manual_gate">
+        <di:waypoint x="2090.0" y="2145.0" />
+        <di:waypoint x="2154.0" y="2145.0" />
+        <di:waypoint x="2154.0" y="2092.0" />
+        <di:waypoint x="2521.0" y="2092.0" />
+        <di:waypoint x="2521.0" y="2145.0" />
+        <di:waypoint x="2457.0" y="2145.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_request_manual_gate_S_request_manual" bpmnElement="Flow_S_request_manual_gate_S_request_manual">
+        <di:waypoint x="2403.0" y="2145.0" />
+        <di:waypoint x="2339.0" y="2145.0" />
+        <di:waypoint x="2339.0" y="2254.0" />
+        <di:waypoint x="1990.0" y="2254.0" />
+        <di:waypoint x="1990.0" y="2190.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2253.0" y="2172.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_request_manual_gate_S_accept" bpmnElement="Flow_S_request_manual_gate_S_accept">
+        <di:waypoint x="2430.0" y="2118.0" />
+        <di:waypoint x="2430.0" y="294.0" />
+        <di:waypoint x="1110.0" y="294.0" />
+        <di:waypoint x="1110.0" y="230.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2444.0" y="1999.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Shape_S_allocation_team_lane" bpmnElement="S_allocation_team_lane" isHorizontal="true">
+        <dc:Bounds x="50" y="2510" width="2527.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_agree_expectations" bpmnElement="S_agree_expectations">
+        <dc:Bounds x="1890.0" y="2920.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_terms_gate" bpmnElement="S_terms_gate">
+        <dc:Bounds x="2403.0" y="2938.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2343.0" y="3000.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_accept_gate_S_agree_expectations" bpmnElement="Flow_S_accept_gate_S_agree_expectations">
+        <di:waypoint x="1550.0" y="158.0" />
+        <di:waypoint x="1550.0" y="94.0" />
+        <di:waypoint x="2034.0" y="94.0" />
+        <di:waypoint x="2034.0" y="2074.0" />
+        <di:waypoint x="1826.0" y="2074.0" />
+        <di:waypoint x="1826.0" y="2965.0" />
+        <di:waypoint x="1890.0" y="2965.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1529.0" y="38.0" width="124" height="42" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_agree_expectations_S_terms_gate" bpmnElement="Flow_S_agree_expectations_S_terms_gate">
+        <di:waypoint x="2090.0" y="2965.0" />
+        <di:waypoint x="2154.0" y="2965.0" />
+        <di:waypoint x="2154.0" y="2912.0" />
+        <di:waypoint x="2521.0" y="2912.0" />
+        <di:waypoint x="2521.0" y="2965.0" />
+        <di:waypoint x="2457.0" y="2965.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_terms_gate_S_alloc_end" bpmnElement="Flow_S_terms_gate_S_alloc_end">
+        <di:waypoint x="2403.0" y="2965.0" />
+        <di:waypoint x="2339.0" y="2965.0" />
+        <di:waypoint x="2339.0" y="2298.0" />
+        <di:waypoint x="2609.0" y="2298.0" />
+        <di:waypoint x="2609.0" y="185.0" />
+        <di:waypoint x="2010.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2353.0" y="2880.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_terms_gate_S_declined_error" bpmnElement="Flow_S_terms_gate_S_declined_error">
+        <di:waypoint x="2430.0" y="2938.0" />
+        <di:waypoint x="2430.0" y="2874.0" />
+        <di:waypoint x="2565.0" y="2874.0" />
+        <di:waypoint x="2565.0" y="505.0" />
+        <di:waypoint x="2010.0" y="505.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2435.0" y="2832.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_S_withdraw_handler">
+    <bpmndi:BPMNPlane id="Plane_S_withdraw_handler" bpmnElement="S_withdraw_handler">
+      <bpmndi:BPMNShape id="Shape_S_withdraw_handler_lane_0" bpmnElement="S_withdraw_handler_lane_0" isHorizontal="true">
+        <dc:Bounds x="50" y="50" width="1640.0" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_withdraw" bpmnElement="S_withdraw">
+        <dc:Bounds x="210.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_compensate" bpmnElement="S_compensate">
+        <dc:Bounds x="650.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="590.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_withdraw_result" bpmnElement="S_withdraw_result">
+        <dc:Bounds x="1010.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_withdraw_end" bpmnElement="S_withdraw_end">
+        <dc:Bounds x="1530.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1470.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_withdraw_S_compensate" bpmnElement="Flow_S_withdraw_S_compensate">
+        <di:waypoint x="250.0" y="185.0" />
+        <di:waypoint x="650.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_compensate_S_withdraw_result" bpmnElement="Flow_S_compensate_S_withdraw_result">
+        <di:waypoint x="690.0" y="185.0" />
+        <di:waypoint x="1010.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_withdraw_result_S_withdraw_end" bpmnElement="Flow_S_withdraw_result_S_withdraw_end">
+        <di:waypoint x="1210.0" y="185.0" />
+        <di:waypoint x="1530.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_S_proposal">
+    <bpmndi:BPMNPlane id="Plane_S_proposal" bpmnElement="S_proposal">
+      <bpmndi:BPMNShape id="Shape_S_proposal_lane_0" bpmnElement="S_proposal_lane_0" isHorizontal="true">
+        <dc:Bounds x="50" y="50" width="7000.0" height="1140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_proposal_lane_1" bpmnElement="S_proposal_lane_1" isHorizontal="true">
+        <dc:Bounds x="50" y="1190" width="7000.0" height="1460" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_proposal_lane_2" bpmnElement="S_proposal_lane_2" isHorizontal="true">
+        <dc:Bounds x="50" y="2650" width="7000.0" height="1140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_proposal_lane_3" bpmnElement="S_proposal_lane_3" isHorizontal="true">
+        <dc:Bounds x="50" y="3790" width="7000.0" height="1140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_sim_gate" bpmnElement="S_sim_gate">
+        <dc:Bounds x="4163.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4103.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_deadline" bpmnElement="S_deadline">
+        <dc:Bounds x="588.0" y="1350.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="528.0" y="1398.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_invalid" bpmnElement="S_invalid">
+        <dc:Bounds x="1970.0" y="485.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1910.0" y="533.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_similarity" bpmnElement="S_similarity">
+        <dc:Bounds x="3650.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_force" bpmnElement="S_force">
+        <dc:Bounds x="6290.0" y="3060.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_validation_limit" bpmnElement="S_validation_limit">
+        <dc:Bounds x="1963.0" y="798.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1903.0" y="860.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_hod_end" bpmnElement="S_hod_end">
+        <dc:Bounds x="5930.0" y="3405.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5870.0" y="3453.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_topic_limit" bpmnElement="S_topic_limit">
+        <dc:Bounds x="5483.0" y="478.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5423.0" y="540.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_new_gate" bpmnElement="S_new_gate">
+        <dc:Bounds x="4163.0" y="1938.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4103.0" y="2000.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_topic_count" bpmnElement="S_topic_count">
+        <dc:Bounds x="5850.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_revision_deadline" bpmnElement="S_revision_deadline">
+        <dc:Bounds x="6748.0" y="1670.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6688.0" y="1718.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_revision_count" bpmnElement="S_revision_count">
+        <dc:Bounds x="6290.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_screen" bpmnElement="S_screen">
+        <dc:Bounds x="1890.0" y="3880.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_validate" bpmnElement="S_validate">
+        <dc:Bounds x="1010.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_hod_notify" bpmnElement="S_hod_notify">
+        <dc:Bounds x="5410.0" y="3060.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_new_limit" bpmnElement="S_new_limit">
+        <dc:Bounds x="3283.0" y="478.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3223.0" y="540.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_late" bpmnElement="S_late">
+        <dc:Bounds x="1010.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_escalation_catch" bpmnElement="S_escalation_catch">
+        <dc:Bounds x="4988.0" y="2810.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4928.0" y="2858.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_valid" bpmnElement="S_valid">
+        <dc:Bounds x="1523.0" y="158.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1463.0" y="220.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_new_topic" bpmnElement="S_new_topic">
+        <dc:Bounds x="3650.0" y="1920.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_late_decision" bpmnElement="S_late_decision">
+        <dc:Bounds x="1450.0" y="4200.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_reject_notice" bpmnElement="S_reject_notice">
+        <dc:Bounds x="2770.0" y="460.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_match_gate" bpmnElement="S_match_gate">
+        <dc:Bounds x="5043.0" y="4218.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4983.0" y="4280.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_screen_gate" bpmnElement="S_screen_gate">
+        <dc:Bounds x="2403.0" y="3898.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2343.0" y="3960.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_force_gate" bpmnElement="S_force_gate">
+        <dc:Bounds x="6803.0" y="3078.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6743.0" y="3140.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_revision_limit" bpmnElement="S_revision_limit">
+        <dc:Bounds x="5923.0" y="3078.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5863.0" y="3140.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_revise" bpmnElement="S_revise">
+        <dc:Bounds x="6730.0" y="1600.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_match" bpmnElement="S_match">
+        <dc:Bounds x="4530.0" y="4200.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_new_count" bpmnElement="S_new_count">
+        <dc:Bounds x="4530.0" y="780.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_review" bpmnElement="S_review" isExpanded="false">
+        <dc:Bounds x="4970.0" y="2740.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_submit" bpmnElement="S_submit">
+        <dc:Bounds x="570.0" y="1280.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_errors" bpmnElement="S_errors">
+        <dc:Bounds x="2330.0" y="780.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_validation_resolution" bpmnElement="S_validation_resolution">
+        <dc:Bounds x="2843.0" y="4538.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2783.0" y="4600.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_late_gate" bpmnElement="S_late_gate">
+        <dc:Bounds x="1963.0" y="4218.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1903.0" y="4280.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_committee_gate" bpmnElement="S_committee_gate">
+        <dc:Bounds x="5483.0" y="2758.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5423.0" y="2820.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_validation_escalate" bpmnElement="S_validation_escalate">
+        <dc:Bounds x="2330.0" y="4520.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_proposal_exit_S_lapsed" bpmnElement="S_proposal_exit_S_lapsed">
+        <dc:Bounds x="2410.0" y="1625.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2350.0" y="1673.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_proposal_exit_S_post_approval" bpmnElement="S_proposal_exit_S_post_approval">
+        <dc:Bounds x="5930.0" y="1305.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5870.0" y="1353.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_proposal_exit_S_rejected" bpmnElement="S_proposal_exit_S_rejected">
+        <dc:Bounds x="3730.0" y="2265.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3670.0" y="2313.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_proposal_start" bpmnElement="S_proposal_start">
+        <dc:Bounds x="210.0" y="1305.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150.0" y="1353.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_milestones" bpmnElement="S_milestones">
+        <dc:Bounds x="4530.0" y="1280.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_resources" bpmnElement="S_resources">
+        <dc:Bounds x="2770.0" y="3880.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_escalation_catch_S_hod_notify" bpmnElement="Flow_S_escalation_catch_S_hod_notify">
+        <di:waypoint x="5008.0" y="2850.0" />
+        <di:waypoint x="5008.0" y="3105.0" />
+        <di:waypoint x="5410.0" y="3105.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_hod_notify_S_hod_end" bpmnElement="Flow_S_hod_notify_S_hod_end">
+        <di:waypoint x="5610.0" y="3105.0" />
+        <di:waypoint x="5674.0" y="3105.0" />
+        <di:waypoint x="5674.0" y="3341.0" />
+        <di:waypoint x="5950.0" y="3341.0" />
+        <di:waypoint x="5950.0" y="3405.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_submit_S_validate" bpmnElement="Flow_S_submit_S_validate">
+        <di:waypoint x="770.0" y="1325.0" />
+        <di:waypoint x="834.0" y="1325.0" />
+        <di:waypoint x="834.0" y="185.0" />
+        <di:waypoint x="1010.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_validate_S_valid" bpmnElement="Flow_S_validate_S_valid">
+        <di:waypoint x="1210.0" y="185.0" />
+        <di:waypoint x="1523.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_valid_S_invalid" bpmnElement="Flow_S_valid_S_invalid">
+        <di:waypoint x="1577.0" y="185.0" />
+        <di:waypoint x="1641.0" y="185.0" />
+        <di:waypoint x="1641.0" y="421.0" />
+        <di:waypoint x="1990.0" y="421.0" />
+        <di:waypoint x="1990.0" y="485.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1655.0" y="212.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_valid_S_validation_limit" bpmnElement="Flow_S_valid_S_validation_limit">
+        <di:waypoint x="1550.0" y="212.0" />
+        <di:waypoint x="1550.0" y="734.0" />
+        <di:waypoint x="1990.0" y="734.0" />
+        <di:waypoint x="1990.0" y="798.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1456.2" y="303.0" width="79.8" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_valid_S_screen" bpmnElement="Flow_S_valid_S_screen">
+        <di:waypoint x="1550.0" y="158.0" />
+        <di:waypoint x="1550.0" y="70.0" />
+        <di:waypoint x="1826.0" y="70.0" />
+        <di:waypoint x="1826.0" y="3925.0" />
+        <di:waypoint x="1890.0" y="3925.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1531.0" y="28.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_validation_limit_S_errors" bpmnElement="Flow_S_validation_limit_S_errors">
+        <di:waypoint x="2017.0" y="825.0" />
+        <di:waypoint x="2081.0" y="825.0" />
+        <di:waypoint x="2081.0" y="934.0" />
+        <di:waypoint x="2430.0" y="934.0" />
+        <di:waypoint x="2430.0" y="870.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2095.0" y="852.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_validation_limit_S_validation_escalate" bpmnElement="Flow_S_validation_limit_S_validation_escalate">
+        <di:waypoint x="1990.0" y="852.0" />
+        <di:waypoint x="1990.0" y="1303.0" />
+        <di:waypoint x="2266.0" y="1303.0" />
+        <di:waypoint x="2266.0" y="4565.0" />
+        <di:waypoint x="2330.0" y="4565.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1904.0" y="943.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_errors_S_submit" bpmnElement="Flow_S_errors_S_submit">
+        <di:waypoint x="2330.0" y="825.0" />
+        <di:waypoint x="2266.0" y="825.0" />
+        <di:waypoint x="2266.0" y="781.0" />
+        <di:waypoint x="670.0" y="781.0" />
+        <di:waypoint x="670.0" y="1280.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_validation_escalate_S_validation_resolution" bpmnElement="Flow_S_validation_escalate_S_validation_resolution">
+        <di:waypoint x="2530.0" y="4565.0" />
+        <di:waypoint x="2843.0" y="4565.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_validation_resolution_S_submit" bpmnElement="Flow_S_validation_resolution_S_submit">
+        <di:waypoint x="2870.0" y="4538.0" />
+        <di:waypoint x="2870.0" y="4474.0" />
+        <di:waypoint x="2556.0" y="4474.0" />
+        <di:waypoint x="2556.0" y="1216.0" />
+        <di:waypoint x="692.0" y="1216.0" />
+        <di:waypoint x="692.0" y="1280.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2793.0" y="4432.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_validation_resolution_S_reject_notice" bpmnElement="Flow_S_validation_resolution_S_reject_notice">
+        <di:waypoint x="2897.0" y="4565.0" />
+        <di:waypoint x="3034.0" y="4565.0" />
+        <di:waypoint x="3034.0" y="3834.0" />
+        <di:waypoint x="2946.0" y="3834.0" />
+        <di:waypoint x="2946.0" y="570.0" />
+        <di:waypoint x="2990.0" y="570.0" />
+        <di:waypoint x="2990.0" y="421.0" />
+        <di:waypoint x="2892.0" y="421.0" />
+        <di:waypoint x="2892.0" y="460.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2966.0" y="4579.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_deadline_S_late" bpmnElement="Flow_S_deadline_S_late">
+        <di:waypoint x="608.0" y="1390.0" />
+        <di:waypoint x="608.0" y="1454.0" />
+        <di:waypoint x="544.0" y="1454.0" />
+        <di:waypoint x="544.0" y="505.0" />
+        <di:waypoint x="1010.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_late_S_late_decision" bpmnElement="Flow_S_late_S_late_decision">
+        <di:waypoint x="1210.0" y="505.0" />
+        <di:waypoint x="1274.0" y="505.0" />
+        <di:waypoint x="1274.0" y="4245.0" />
+        <di:waypoint x="1450.0" y="4245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_late_decision_S_late_gate" bpmnElement="Flow_S_late_decision_S_late_gate">
+        <di:waypoint x="1650.0" y="4245.0" />
+        <di:waypoint x="1963.0" y="4245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_late_gate_S_submit" bpmnElement="Flow_S_late_gate_S_submit">
+        <di:waypoint x="1990.0" y="4218.0" />
+        <di:waypoint x="1990.0" y="4154.0" />
+        <di:waypoint x="692.0" y="4154.0" />
+        <di:waypoint x="692.0" y="1370.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1913.0" y="4112.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_late_gate_S_lapsed" bpmnElement="Flow_S_late_gate_S_lapsed">
+        <di:waypoint x="2017.0" y="4245.0" />
+        <di:waypoint x="2386.0" y="4245.0" />
+        <di:waypoint x="2386.0" y="1729.0" />
+        <di:waypoint x="2430.0" y="1729.0" />
+        <di:waypoint x="2430.0" y="1665.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2086.0" y="4203.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_screen_S_screen_gate" bpmnElement="Flow_S_screen_S_screen_gate">
+        <di:waypoint x="2090.0" y="3925.0" />
+        <di:waypoint x="2403.0" y="3925.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_screen_gate_S_similarity" bpmnElement="Flow_S_screen_gate_S_similarity">
+        <di:waypoint x="2457.0" y="3925.0" />
+        <di:waypoint x="2770.0" y="3925.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2586.0" y="3883.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_screen_gate_S_reject_notice" bpmnElement="Flow_S_screen_gate_S_reject_notice">
+        <di:waypoint x="2430.0" y="3898.0" />
+        <di:waypoint x="2430.0" y="3834.0" />
+        <di:waypoint x="2706.0" y="3834.0" />
+        <di:waypoint x="2706.0" y="527.0" />
+        <di:waypoint x="2770.0" y="527.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2435.0" y="3792.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_similarity_S_sim_gate" bpmnElement="Flow_S_similarity_S_sim_gate">
+        <di:waypoint x="3850.0" y="185.0" />
+        <di:waypoint x="4163.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_sim_gate_S_match" bpmnElement="Flow_S_sim_gate_S_match">
+        <di:waypoint x="4190.0" y="212.0" />
+        <di:waypoint x="4190.0" y="1391.0" />
+        <di:waypoint x="4510.0" y="1391.0" />
+        <di:waypoint x="4510.0" y="4245.0" />
+        <di:waypoint x="4530.0" y="4245.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4204.0" y="303.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_sim_gate_S_review" bpmnElement="Flow_S_sim_gate_S_review">
+        <di:waypoint x="4217.0" y="185.0" />
+        <di:waypoint x="4281.0" y="185.0" />
+        <di:waypoint x="4281.0" y="1325.0" />
+        <di:waypoint x="4530.0" y="1325.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4295.0" y="212.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_match_S_match_gate" bpmnElement="Flow_S_match_S_match_gate">
+        <di:waypoint x="4730.0" y="4245.0" />
+        <di:waypoint x="4794.0" y="4245.0" />
+        <di:waypoint x="4794.0" y="4336.0" />
+        <di:waypoint x="5070.0" y="4336.0" />
+        <di:waypoint x="5070.0" y="4272.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_match_gate_S_review" bpmnElement="Flow_S_match_gate_S_review">
+        <di:waypoint x="5070.0" y="4218.0" />
+        <di:waypoint x="5070.0" y="4154.0" />
+        <di:waypoint x="4750.0" y="4154.0" />
+        <di:waypoint x="4750.0" y="2009.0" />
+        <di:waypoint x="4838.0" y="2009.0" />
+        <di:waypoint x="4838.0" y="1434.0" />
+        <di:waypoint x="4630.0" y="1434.0" />
+        <di:waypoint x="4630.0" y="1370.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4993.0" y="4112.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_match_gate_S_topic_limit" bpmnElement="Flow_S_match_gate_S_topic_limit">
+        <di:waypoint x="5097.0" y="4245.0" />
+        <di:waypoint x="5375.0" y="4245.0" />
+        <di:waypoint x="5375.0" y="596.0" />
+        <di:waypoint x="5510.0" y="596.0" />
+        <di:waypoint x="5510.0" y="532.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5166.0" y="4203.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_match_gate_S_reject_notice" bpmnElement="Flow_S_match_gate_S_reject_notice">
+        <di:waypoint x="5043.0" y="4245.0" />
+        <di:waypoint x="4979.0" y="4245.0" />
+        <di:waypoint x="4979.0" y="4198.0" />
+        <di:waypoint x="4750.0" y="4198.0" />
+        <di:waypoint x="4750.0" y="4174.0" />
+        <di:waypoint x="3958.0" y="4174.0" />
+        <di:waypoint x="3958.0" y="4289.0" />
+        <di:waypoint x="2990.0" y="4289.0" />
+        <di:waypoint x="2990.0" y="640.0" />
+        <di:waypoint x="2892.0" y="640.0" />
+        <di:waypoint x="2892.0" y="550.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4893.0" y="4215.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_topic_limit_S_topic_count" bpmnElement="Flow_S_topic_limit_S_topic_count">
+        <di:waypoint x="5537.0" y="505.0" />
+        <di:waypoint x="5601.0" y="505.0" />
+        <di:waypoint x="5601.0" y="614.0" />
+        <di:waypoint x="5950.0" y="614.0" />
+        <di:waypoint x="5950.0" y="550.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5615.0" y="532.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_topic_limit_S_reject_notice" bpmnElement="Flow_S_topic_limit_S_reject_notice">
+        <di:waypoint x="5483.0" y="505.0" />
+        <di:waypoint x="5419.0" y="505.0" />
+        <di:waypoint x="5419.0" y="614.0" />
+        <di:waypoint x="2870.0" y="614.0" />
+        <di:waypoint x="2870.0" y="550.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5330.9" y="507.0" width="74.1" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_topic_count_S_submit" bpmnElement="Flow_S_topic_count_S_submit">
+        <di:waypoint x="5850.0" y="505.0" />
+        <di:waypoint x="5786.0" y="505.0" />
+        <di:waypoint x="5786.0" y="465.0" />
+        <di:waypoint x="5463.0" y="465.0" />
+        <di:waypoint x="5463.0" y="737.0" />
+        <di:waypoint x="2034.0" y="737.0" />
+        <di:waypoint x="2034.0" y="1347.0" />
+        <di:waypoint x="770.0" y="1347.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_review_S_committee_gate" bpmnElement="Flow_S_review_S_committee_gate">
+        <di:waypoint x="5170.0" y="2785.0" />
+        <di:waypoint x="5234.0" y="2785.0" />
+        <di:waypoint x="5234.0" y="2876.0" />
+        <di:waypoint x="5510.0" y="2876.0" />
+        <di:waypoint x="5510.0" y="2812.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_committee_gate_S_guide_rule" bpmnElement="Flow_S_committee_gate_S_guide_rule">
+        <di:waypoint x="5510.0" y="2758.0" />
+        <di:waypoint x="5510.0" y="1409.0" />
+        <di:waypoint x="5950.0" y="1409.0" />
+        <di:waypoint x="5950.0" y="1345.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5524.0" y="2639.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_committee_gate_S_revision_limit" bpmnElement="Flow_S_committee_gate_S_revision_limit">
+        <di:waypoint x="5537.0" y="2785.0" />
+        <di:waypoint x="5859.0" y="2785.0" />
+        <di:waypoint x="5859.0" y="3105.0" />
+        <di:waypoint x="5923.0" y="3105.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5606.0" y="2743.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_committee_gate_S_reject_notice" bpmnElement="Flow_S_committee_gate_S_reject_notice">
+        <di:waypoint x="5483.0" y="2785.0" />
+        <di:waypoint x="5419.0" y="2785.0" />
+        <di:waypoint x="5419.0" y="658.0" />
+        <di:waypoint x="5507.0" y="658.0" />
+        <di:waypoint x="5507.0" y="549.0" />
+        <di:waypoint x="3445.0" y="549.0" />
+        <di:waypoint x="3445.0" y="396.0" />
+        <di:waypoint x="2870.0" y="396.0" />
+        <di:waypoint x="2870.0" y="460.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5433.0" y="2700.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_revision_limit_S_revision_count" bpmnElement="Flow_S_revision_limit_S_revision_count">
+        <di:waypoint x="5950.0" y="3078.0" />
+        <di:waypoint x="5950.0" y="3014.0" />
+        <di:waypoint x="5990.0" y="3014.0" />
+        <di:waypoint x="5990.0" y="1365.0" />
+        <di:waypoint x="5906.0" y="1365.0" />
+        <di:waypoint x="5906.0" y="570.0" />
+        <di:waypoint x="6226.0" y="570.0" />
+        <di:waypoint x="6226.0" y="505.0" />
+        <di:waypoint x="6290.0" y="505.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6004.0" y="2999.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_revision_limit_S_force" bpmnElement="Flow_S_revision_limit_S_force">
+        <di:waypoint x="5977.0" y="3105.0" />
+        <di:waypoint x="6290.0" y="3105.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6042.1" y="3063.0" width="79.8" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_revision_count_S_revise" bpmnElement="Flow_S_revision_count_S_revise">
+        <di:waypoint x="6490.0" y="505.0" />
+        <di:waypoint x="6554.0" y="505.0" />
+        <di:waypoint x="6554.0" y="1536.0" />
+        <di:waypoint x="6830.0" y="1536.0" />
+        <di:waypoint x="6830.0" y="1600.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_revise_S_validate" bpmnElement="Flow_S_revise_S_validate">
+        <di:waypoint x="6730.0" y="1645.0" />
+        <di:waypoint x="6076.0" y="1645.0" />
+        <di:waypoint x="6076.0" y="114.0" />
+        <di:waypoint x="1236.0" y="114.0" />
+        <di:waypoint x="1236.0" y="294.0" />
+        <di:waypoint x="1110.0" y="294.0" />
+        <di:waypoint x="1110.0" y="230.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_revision_deadline_S_lapsed" bpmnElement="Flow_S_revision_deadline_S_lapsed">
+        <di:waypoint x="6768.0" y="1710.0" />
+        <di:waypoint x="6768.0" y="1774.0" />
+        <di:waypoint x="2514.0" y="1774.0" />
+        <di:waypoint x="2514.0" y="1645.0" />
+        <di:waypoint x="2450.0" y="1645.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_force_S_force_gate" bpmnElement="Flow_S_force_S_force_gate">
+        <di:waypoint x="6490.0" y="3105.0" />
+        <di:waypoint x="6554.0" y="3105.0" />
+        <di:waypoint x="6554.0" y="3052.0" />
+        <di:waypoint x="6921.0" y="3052.0" />
+        <di:waypoint x="6921.0" y="3105.0" />
+        <di:waypoint x="6857.0" y="3105.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_force_gate_S_guide_rule" bpmnElement="Flow_S_force_gate_S_guide_rule">
+        <di:waypoint x="6830.0" y="3078.0" />
+        <di:waypoint x="6830.0" y="3014.0" />
+        <di:waypoint x="6956.0" y="3014.0" />
+        <di:waypoint x="6956.0" y="1580.0" />
+        <di:waypoint x="6034.0" y="1580.0" />
+        <di:waypoint x="6034.0" y="1325.0" />
+        <di:waypoint x="5970.0" y="1325.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6835.0" y="2972.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_force_gate_S_reject_notice" bpmnElement="Flow_S_force_gate_S_reject_notice">
+        <di:waypoint x="6803.0" y="3105.0" />
+        <di:waypoint x="6739.0" y="3105.0" />
+        <di:waypoint x="6739.0" y="1818.0" />
+        <di:waypoint x="7000.0" y="1818.0" />
+        <di:waypoint x="7000.0" y="352.0" />
+        <di:waypoint x="2706.0" y="352.0" />
+        <di:waypoint x="2706.0" y="505.0" />
+        <di:waypoint x="2770.0" y="505.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6753.0" y="3020.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_reject_notice_S_new_limit" bpmnElement="Flow_S_reject_notice_S_new_limit">
+        <di:waypoint x="2970.0" y="505.0" />
+        <di:waypoint x="3283.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_new_limit_S_new_topic" bpmnElement="Flow_S_new_limit_S_new_topic">
+        <di:waypoint x="3337.0" y="505.0" />
+        <di:waypoint x="3401.0" y="505.0" />
+        <di:waypoint x="3401.0" y="1965.0" />
+        <di:waypoint x="3650.0" y="1965.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3415.0" y="562.0" width="74.1" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_new_limit_S_rejected" bpmnElement="Flow_S_new_limit_S_rejected">
+        <di:waypoint x="3310.0" y="532.0" />
+        <di:waypoint x="3310.0" y="2201.0" />
+        <di:waypoint x="3750.0" y="2201.0" />
+        <di:waypoint x="3750.0" y="2265.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3285.55" y="446.0" width="96.9" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_new_topic_S_new_gate" bpmnElement="Flow_S_new_topic_S_new_gate">
+        <di:waypoint x="3850.0" y="1965.0" />
+        <di:waypoint x="4163.0" y="1965.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_new_gate_S_new_count" bpmnElement="Flow_S_new_gate_S_new_count">
+        <di:waypoint x="4217.0" y="1965.0" />
+        <di:waypoint x="4750.0" y="1965.0" />
+        <di:waypoint x="4750.0" y="934.0" />
+        <di:waypoint x="4630.0" y="934.0" />
+        <di:waypoint x="4630.0" y="870.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4316.0" y="1923.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_new_gate_S_rejected" bpmnElement="Flow_S_new_gate_S_rejected">
+        <di:waypoint x="4190.0" y="1992.0" />
+        <di:waypoint x="4190.0" y="2285.0" />
+        <di:waypoint x="3770.0" y="2285.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4204.0" y="2083.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_new_count_S_submit" bpmnElement="Flow_S_new_count_S_submit">
+        <di:waypoint x="4530.0" y="825.0" />
+        <di:waypoint x="4466.0" y="825.0" />
+        <di:waypoint x="4466.0" y="1434.0" />
+        <di:waypoint x="670.0" y="1434.0" />
+        <di:waypoint x="670.0" y="1370.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_proposal_start_S_submit" bpmnElement="Flow_S_proposal_start_S_submit">
+        <di:waypoint x="250.0" y="1325.0" />
+        <di:waypoint x="570.0" y="1325.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_milestones_S_review" bpmnElement="Flow_S_milestones_S_review">
+        <di:waypoint x="4730.0" y="1325.0" />
+        <di:waypoint x="4794.0" y="1325.0" />
+        <di:waypoint x="4794.0" y="2785.0" />
+        <di:waypoint x="4970.0" y="2785.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_resources_S_similarity" bpmnElement="Flow_S_resources_S_similarity">
+        <di:waypoint x="2970.0" y="3925.0" />
+        <di:waypoint x="3283.0" y="3925.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Shape_S_resource_gate" bpmnElement="S_resource_gate">
+        <dc:Bounds x="3283.0" y="3898.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3223.0" y="3960.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_adjust_scope" bpmnElement="S_adjust_scope">
+        <dc:Bounds x="3650.0" y="1600.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_recheck_resources" bpmnElement="S_recheck_resources">
+        <dc:Bounds x="4090.0" y="4200.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_resource_result" bpmnElement="S_resource_result">
+        <dc:Bounds x="4603.0" y="4538.0" width="54" height="54" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4543.0" y="4600.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_resource_gate_S_similarity" bpmnElement="Flow_S_resource_gate_S_similarity">
+        <di:waypoint x="3310.0" y="3952.0" />
+        <di:waypoint x="3310.0" y="4016.0" />
+        <di:waypoint x="3363.0" y="4016.0" />
+        <di:waypoint x="3363.0" y="3790.0" />
+        <di:waypoint x="3266.0" y="3790.0" />
+        <di:waypoint x="3266.0" y="185.0" />
+        <di:waypoint x="3650.0" y="185.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3315.0" y="4030.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_resource_gate_S_adjust_scope" bpmnElement="Flow_S_resource_gate_S_adjust_scope">
+        <di:waypoint x="3337.0" y="3925.0" />
+        <di:waypoint x="3357.0" y="3925.0" />
+        <di:waypoint x="3357.0" y="1645.0" />
+        <di:waypoint x="3650.0" y="1645.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3371.0" y="3826.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_resource_gate_S_reject_notice" bpmnElement="Flow_S_resource_gate_S_reject_notice">
+        <di:waypoint x="3310.0" y="3898.0" />
+        <di:waypoint x="3310.0" y="3834.0" />
+        <di:waypoint x="3034.0" y="3834.0" />
+        <di:waypoint x="3034.0" y="527.0" />
+        <di:waypoint x="2970.0" y="527.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3203.0" y="3848.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_adjust_scope_S_recheck_resources" bpmnElement="Flow_S_adjust_scope_S_recheck_resources">
+        <di:waypoint x="3850.0" y="1645.0" />
+        <di:waypoint x="3914.0" y="1645.0" />
+        <di:waypoint x="3914.0" y="4245.0" />
+        <di:waypoint x="4090.0" y="4245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_recheck_resources_S_resource_result" bpmnElement="Flow_S_recheck_resources_S_resource_result">
+        <di:waypoint x="4290.0" y="4245.0" />
+        <di:waypoint x="4354.0" y="4245.0" />
+        <di:waypoint x="4354.0" y="4521.0" />
+        <di:waypoint x="4721.0" y="4521.0" />
+        <di:waypoint x="4721.0" y="4565.0" />
+        <di:waypoint x="4657.0" y="4565.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_resource_result_S_similarity" bpmnElement="Flow_S_resource_result_S_similarity">
+        <di:waypoint x="4603.0" y="4565.0" />
+        <di:waypoint x="4310.0" y="4565.0" />
+        <di:waypoint x="4310.0" y="1522.0" />
+        <di:waypoint x="3750.0" y="1522.0" />
+        <di:waypoint x="3750.0" y="230.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4462.0" y="4579.0" width="72" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_resource_result_S_reject_notice" bpmnElement="Flow_S_resource_result_S_reject_notice">
+        <di:waypoint x="4630.0" y="4538.0" />
+        <di:waypoint x="4630.0" y="4474.0" />
+        <di:waypoint x="4398.0" y="4474.0" />
+        <di:waypoint x="4398.0" y="1478.0" />
+        <di:waypoint x="3078.0" y="1478.0" />
+        <di:waypoint x="3078.0" y="465.0" />
+        <di:waypoint x="3034.0" y="465.0" />
+        <di:waypoint x="3034.0" y="483.0" />
+        <di:waypoint x="2970.0" y="483.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4537.7" y="4432.0" width="102.6" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_S_review">
+    <bpmndi:BPMNPlane id="Plane_S_review" bpmnElement="S_review">
+      <bpmndi:BPMNShape id="Shape_S_review_lane_0" bpmnElement="S_review_lane_0" isHorizontal="true">
+        <dc:Bounds x="50" y="50" width="1640.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_review_lane_1" bpmnElement="S_review_lane_1" isHorizontal="true">
+        <dc:Bounds x="50" y="870" width="1640.0" height="820" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_review_start" bpmnElement="S_review_start">
+        <dc:Bounds x="210.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_committee" bpmnElement="S_committee">
+        <dc:Bounds x="570.0" y="140.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_review_end" bpmnElement="S_review_end">
+        <dc:Bounds x="1090.0" y="165.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1030.0" y="213.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_reminder_timer" bpmnElement="S_reminder_timer">
+        <dc:Bounds x="644.0" y="210.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="584.0" y="300.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_remind" bpmnElement="S_remind">
+        <dc:Bounds x="1010.0" y="1280.0" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_remind_end" bpmnElement="S_remind_end">
+        <dc:Bounds x="1530.0" y="1305.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1470.0" y="1353.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_hod_timer" bpmnElement="S_hod_timer">
+        <dc:Bounds x="588.0" y="210.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="528.0" y="258.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_escalate" bpmnElement="S_escalate">
+        <dc:Bounds x="1090.0" y="485.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1030.0" y="533.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_S_escalate_end" bpmnElement="S_escalate_end">
+        <dc:Bounds x="1530.0" y="485.0" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1470.0" y="533.0" width="160" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_review_start_S_committee" bpmnElement="Flow_S_review_start_S_committee">
+        <di:waypoint x="250.0" y="185.0" />
+        <di:waypoint x="570.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_committee_S_review_end" bpmnElement="Flow_S_committee_S_review_end">
+        <di:waypoint x="770.0" y="185.0" />
+        <di:waypoint x="1090.0" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_reminder_timer_S_remind" bpmnElement="Flow_S_reminder_timer_S_remind">
+        <di:waypoint x="664.0" y="250.0" />
+        <di:waypoint x="664.0" y="1325.0" />
+        <di:waypoint x="1010.0" y="1325.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_remind_S_remind_end" bpmnElement="Flow_S_remind_S_remind_end">
+        <di:waypoint x="1210.0" y="1325.0" />
+        <di:waypoint x="1530.0" y="1325.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_hod_timer_S_escalate" bpmnElement="Flow_S_hod_timer_S_escalate">
+        <di:waypoint x="608.0" y="250.0" />
+        <di:waypoint x="608.0" y="421.0" />
+        <di:waypoint x="1110.0" y="421.0" />
+        <di:waypoint x="1110.0" y="485.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_S_escalate_S_escalate_end" bpmnElement="Flow_S_escalate_S_escalate_end">
+        <di:waypoint x="1130.0" y="505.0" />
+        <di:waypoint x="1530.0" y="505.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
