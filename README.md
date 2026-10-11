@@ -1,76 +1,103 @@
 # Experiment 3: BPMN Assignment
 
+This project contains two business-process models created using Camunda Modeler 8:
+
+1. Student Project Approval and Allocation System
+2. Logistics and Shipment Exception Management
+
+Both models show the main successful flow and alternate routes for handling problems.
+
+---
+
 ## Assignment 1: Student Project Approval and Allocation System
 
 ### Purpose
 
-This assignment models how a department handles a final-year project proposal, from the team's first submission to confirmed faculty supervision.
+This process shows how a student project proposal is validated, reviewed and assigned to a suitable faculty guide.
 
 ### Objectives
 
-- Check that the proposal contains enough information to evaluate.
-- Verify team eligibility and avoid duplicate project topics.
-- Give the coordinator and committee clear decision points.
-- Match an approved project to a suitable guide.
-- Resolve common problems before closing the case.
-- End with a clear allocated, rejected, lapsed or withdrawn outcome.
+- Validate proposal details and team eligibility.
+- Check scope, resources and topic similarity.
+- Handle approval, revision and rejection.
+- Match the project with a suitable guide.
+- Resolve allocation and notification problems.
+- Show clear completion and closure outcomes.
 
-### Participants and Responsibilities
+### Participants
 
-- **Student / Team:** submits the proposal, explains the expected outcome and milestones, and completes revisions.
-- **Project Coordinator:** screens the proposal, checks resources, helps resolve incomplete information and arranges manual allocation when needed.
-- **Review Committee and HoD:** evaluate feasibility, request revision, approve or reject, and respond to delayed review.
-- **Faculty Guide:** accepts or declines supervision.
-- **Project Management System:** validates information, checks similarity, applies guide rules, records decisions and sends notifications.
+- **Student / Team:** submits proposals, corrects information and completes revisions.
+- **Project Coordinator:** screens proposals, checks resources and handles manual recovery.
+- **Review Committee:** evaluates proposals and decides whether to approve, revise or reject.
+- **HoD:** receives notification when review remains delayed.
+- **Faculty Guide:** accepts, declines or proposes supervision conditions.
+- **Project Management System:** validates details, checks similarity, matches guides and records allocations.
 
-### Normal Process
+The overview uses **Project department** and **Coordinator / support** lanes. Task names identify the roles involved in each stage.
 
-1. The team begins the project submission process.
-2. A project record is opened.
-3. The team submits its proposal.
-4. The system checks the details and team rules.
-5. The coordinator screens the proposal.
-6. The coordinator checks the required resources. If they are unavailable, the team can submit one adjusted plan before the coordinator decides whether the project can continue.
-7. A similarity check identifies possible overlap with previous projects.
-8. The team records its expected outcome and planned milestones.
-9. The committee evaluates the proposal and chooses approval, revision or rejection.
-10. An approved project is matched to a guide using domain, availability and workload.
-11. The system reserves the guide slot and sends an allocation request.
-12. The guide accepts supervision. Any conditions proposed by the guide must also be agreed by the team.
-13. The allocation is recorded and the student is notified.
-14. The project ends as allocated.
+### Main Process
+
+1. The student submits the proposal.
+2. The system validates proposal details and team rules.
+3. The coordinator checks scope and resources.
+4. The system checks topic similarity.
+5. The committee evaluates the proposal.
+6. An approved proposal enters guide allocation.
+7. Guide rules check domain, availability and workload.
+8. The system reserves a guide slot and sends a request.
+9. The guide accepts supervision.
+10. The system records the allocation and notifies the student and guide.
+11. The process ends with **Project allocated**.
 
 ### Problems and How They Are Handled
 
-- **Proposal cannot be assessed:** Missing details or inconsistent team information prevent review. Return the specific errors to the team. After two unsuccessful submissions, ask the coordinator to resolve the issue.
-- **Team does not meet the rules:** The team is too large or a member is already registered elsewhere. Explain the eligibility issue and close this submission. A corrected team can make a new submission.
-- **Required resources are unavailable:** The proposed project needs software, equipment or data that cannot be obtained. Allow one adjusted resource plan, such as a smaller scope or accessible tools/data. The coordinator checks feasibility again; if it is still not feasible, send rejection reasons and use the new-topic option.
-- **Topic overlaps an existing project:** The similarity result indicates that the proposed work may repeat earlier work. The coordinator checks the actual overlap and chooses clearance, a topic change or rejection.
-- **Submission window expires:** The team has not submitted before the deadline. Ask the coordinator whether late submission can be accepted. Otherwise close the proposal as lapsed.
-- **Committee cannot approve the current scope:** The idea needs clearer objectives or a smaller workload. Arrange a brief mentoring discussion and ask the team to revise. Limit revisions to two cycles, with seven days per revision, then require a final decision.
-- **Proposal is rejected:** The coordinator or committee decides the project cannot proceed. Send reasons and allow one new-topic submission. Close as rejected if the team declines or that opportunity is exhausted.
-- **Review is not completed on time:** The committee has not recorded a decision. Send a reminder after two days. After four days, inform the HoD while the review remains active.
-- **No suitable guide is available:** No matching guide has space in the current workload. Ask the coordinator to consider manual allocation, a co-guide, an external guide or a limited waiting period.
-- **Guide will accept only with conditions:** The guide proposes supervision expectations or project changes that the team has not accepted. Discuss those conditions with the team. Confirm allocation only when they agree; otherwise treat the request as unsuccessful and choose another guide.
-- **Guide declines or does not reply:** The selected guide refuses or the response deadline expires. Release the reserved slot, exclude the guide and try another. After three requests, use coordinator-led allocation.
-- **Notification or allocation record fails:** A system operation cannot be completed. Retry within the limit and then ask the coordinator to confirm the action manually.
-- **Team or guide withdraws:** The team stops the project or the assigned guide leaves. Release the reserved slot. Close a team withdrawal; restart guide selection when the team still wants to continue.
+| Problem | Solution |
+|---|---|
+| Missing details | Correct the proposal with coordinator support and submit again. |
+| Invalid team | Close the current proposal through an error end event. |
+| Resources unavailable | Agree an adjusted scope or resource plan and check feasibility again. |
+| Similar topic | The coordinator accepts the topic, requests a change or closes the proposal. |
+| Late submission | A seven-day boundary timer sends the late request to the coordinator for a decision. |
+| Revision required | Allow two revision cycles, then require a final committee decision. |
+| Revision deadline missed | A seven-day timer closes review and sends reasons. |
+| Unsuccessful review | Allow one new-topic submission, otherwise close the proposal. |
+| Review delayed | Send a reminder after two days and inform the HoD after four days while review continues. |
+| Guide unavailable | The coordinator confirms a willing replacement guide. |
+| Conditional acceptance | Discuss the guide's conditions with the team before confirming allocation. |
+| Guide declines or remains silent | Release the slot, exclude the guide and retry. After three failed requests, use coordinator allocation. |
+| Recording failure | The coordinator records the allocation manually. |
+| Notification failure | The coordinator confirms notification manually. |
+| Withdrawal during allocation | Release the reservation. Restart allocation if the team continues, otherwise end as withdrawn. |
 
-### BPMN Approach
+### BPMN Elements Used
 
-User tasks represent human submissions and decisions. Service tasks represent automatic checks and records. Business rule tasks represent guide-selection rules. Exclusive gateways select one outcome. Timers represent deadlines and reminders. Error recovery and compensation handle failed operations and released guide reservations. Subprocesses group related steps.
+| Element | Use in the process |
+|---|---|
+| User task | Submission, screening, review, revision, guide responses and manual recovery. |
+| Service task | Validation, similarity checking, reservation, recording and reservation release. |
+| Business rule task | Matching guide domain and workload. |
+| Send task | Requests, reminders, rejection reasons and notifications. |
+| Exclusive gateway | Selecting validation, approval, allocation and retry outcomes. |
+| Boundary timer | Submission, revision, review and guide-response deadlines. |
+| Error event | Closing unsuccessful stages and handling system failures. |
+| Message boundary event | Withdrawal during allocation. |
+| Subprocess | Grouping proposal checking, review and guide allocation. |
+
+This model uses boundary events for deadlines and exceptions. It does not contain standalone intermediate catch or throw events.
 
 ### Final Outcomes
 
-- **Project allocated:** the guide accepts and the student is notified.
-- **Rejected:** the proposal cannot proceed.
-- **Lapsed:** a deadline or unresolved allocation issue closes the proposal.
-- **Invalid team:** the current submission is closed because team rules are not met.
-- **Withdrawn:** the team ends its participation.
+- **Project allocated:** supervision is confirmed and notification is complete.
+- **Proposal closed:** the proposal cannot proceed.
+- **Team withdrawn:** the team stops participating during allocation.
 
-### Modelling Assumptions
+### Modelling Notes
 
-The initial submission window is seven days. Revision and response deadlines are shown in the process. Similarity thresholds, team limits and guide capacities are department policies. This is a business-process model within syllabus Units 1-4.
+- Submission and revision deadlines are seven days.
+- Review reminders occur after two days, followed by HoD notification after four days.
+- The guide-response deadline is three days.
+- Team rules, similarity thresholds and guide capacities depend on department policy.
+- Reservation release uses a service task rather than a BPMN compensation event.
 
 ---
 
@@ -78,70 +105,110 @@ The initial submission window is seven days. Revision and response deadlines are
 
 ### Purpose
 
-This assignment models a parcel's journey from shipment booking to pickup, hub movement, delivery and closure, including the exceptions that may interrupt the journey.
+This process shows how a parcel moves from booking and pickup through transport, delivery and shipment closure.
 
 ### Objectives
 
-- Validate a booking before scheduling collection.
-- Keep parcel movement and tracking updates coordinated.
-- Detect damage, delays and missing scans.
-- Resolve delivery problems through controlled recovery paths.
-- Record proof before declaring successful delivery.
-- End each shipment as delivered, returned, lost or cancelled.
+- Validate booking information before pickup.
+- Check collection and packaging.
+- Coordinate transport and tracking.
+- Handle damage, delays, missing scans and customs problems.
+- Resolve unsuccessful delivery attempts.
+- Verify receipt before closing the shipment.
 
-### Participants and Responsibilities
+### Participants
 
-- **Shipper / Customer:** books the shipment, corrects booking information and provides customs documents.
-- **Control Tower / Dispatcher:** schedules pickup, monitors movement, handles delays and coordinates recovery.
-- **Pickup Agent:** collects the parcel, records the pickup scan and checks packaging.
-- **Hub / Warehouse:** sorts, scans and moves the parcel through each shipment leg.
-- **Delivery Agent:** attempts delivery and records proof or the reason for failure.
-- **Recipient:** supplies delivery information, accepts the parcel or arranges collection.
-- **Claims Department:** inspects damage and resolves eligible claims or compensation.
+- **Shipper / Customer:** books the shipment, corrects details and supplies documents.
+- **Dispatcher:** schedules pickup and coordinates movement.
+- **Pickup Agent:** collects the parcel and checks packaging.
+- **Hub / Warehouse Staff:** sort, scan and transport parcels.
+- **Delivery Agent:** attempts delivery and captures proof.
+- **Recipient:** receives the parcel or collects it from the depot.
+- **Supervisor / Claims Staff:** resolve recording errors, damage and claims.
 
-### Normal Process
+The overview uses **Shipment operations** and **Support / claims** lanes.
 
-1. The shipper begins the booking.
-2. A shipment record is opened.
-3. The shipper enters the parcel and recipient information.
-4. Booking rules validate the address, weight and service level and calculate charges.
-5. Pickup is scheduled and a driver is assigned.
-6. The pickup agent collects the parcel and records its scan.
-7. The agent checks the packaging. Unsafe packing must be corrected and rechecked before dispatch.
-8. Shipment charges are recorded.
-9. Parcel movement and the tracking update proceed in parallel.
-10. The parcel is sorted, scanned and transported through each hub and line-haul leg.
-11. The dispatcher records delivery instructions such as access details or a landmark.
-12. The recipient is notified that the parcel is out for delivery.
-13. The delivery agent hands over the parcel and records proof of delivery.
-14. The delivery evidence is checked. The shipment is closed and invoiced only after receipt is verified.
+### Main Process
+
+1. The shipper enters booking details.
+2. Booking rules validate the address, weight and service and calculate the charge.
+3. The system schedules pickup and assigns a driver.
+4. The agent collects the parcel and checks packaging and the pickup scan.
+5. The system records the shipment charge.
+6. Transport and tracking notification begin in parallel.
+7. The parcel is sorted, scanned and transported through the planned legs.
+8. Transport and tracking reach the parallel join.
+9. The recipient receives a delivery notification.
+10. The agent delivers the parcel and captures proof.
+11. Staff verify delivery proof or confirm receipt.
+12. The system closes the shipment and issues an invoice.
+13. The process ends with **Shipment delivered**.
 
 ### Problems and How They Are Handled
 
-- **Pickup cannot be completed:** The shipper is absent or the parcel is not ready. Reschedule within the two-attempt limit. If pickup still fails, cancel the booking and apply the relevant fee.
-- **Parcel is unsafe to transport:** The seal, protective packing or fragile-item protection is inadequate. Ask the shipper to repack once and check it again. Proceed only if it is safe; otherwise cancel pickup.
-- **Address is incorrect:** The booking address is incomplete or the driver discovers a wrong address. Get the corrected address before proceeding. For a delivery-stage change, check whether the new zone needs a surcharge.
-- **Parcel is damaged:** Damage is found at a hub or at the delivery stage. Inspect the damage and check insurance. Handle an eligible refund, replacement or reshipment; record and report an uninsured case.
-- **Parcel cannot be located:** No arrival scan is received within the expected tracking window. Trace it after 48 hours without an arrival scan. If tracing cannot find it within five days, record the loss and handle compensation.
-- **Transit falls behind schedule:** Weather, a breakdown or capacity problems delay movement. Inform the customer, update the expected arrival and arrange an alternate route or vehicle where possible.
-- **Customs will not release the parcel:** The international shipment documents are missing or unacceptable. Request corrected documents and review them. Return the shipment if the five-day deadline or correction limit is exceeded.
-- **Recipient cannot receive the parcel:** Delivery attempts fail because the recipient is unavailable. After the attempt limit, offer depot pickup or authorized collection during the holding period. Check collector identity and capture delivery proof; return the parcel if it remains uncollected.
-- **Recipient refuses or cannot pay:** The parcel is refused or cash-on-delivery payment fails. Start the return-to-sender route and adjust the shipment charges.
-- **Scan or tracking information cannot be recorded:** A scanner is offline or the tracking records disagree. Have a supervisor capture the information manually, then reconcile the record before continuing.
-- **Delivery evidence is missing or unreadable:** The handover is reported as successful, but proof is incomplete. Check the evidence before closure. Recover the proof or verify receipt directly with the recipient and record the confirmation. Keep the task open if receipt cannot be verified.
-- **Shipper cancels after dispatch:** The cancellation arrives after movement has started. Intercept the parcel, return it and refund the eligible amount after the cancellation fee.
+| Problem | Solution |
+|---|---|
+| Incorrect booking | Return the details to the shipper for correction. |
+| Pickup failure | Reschedule once and retry the next day. A second failure cancels the booking and applies the fee. |
+| Unsafe packaging | Allow one repacking attempt. Cancel pickup if packaging remains unsafe. |
+| Tracking failure | A supervisor updates tracking manually before the join. |
+| Hub scan failure | A supervisor records and reconciles the scan manually. |
+| Damage at a hub | Inspect the parcel and agree a claim, then continue with a suitable resolution or return it. |
+| Transit delay | Notify the customer, arrange an alternate route and wait again for arrival. |
+| Customs hold | Request documents, check them and allow one correction. |
+| Customs deadline missed | A five-day boundary timer leads to return. |
+| Missing arrival scan | A 48-hour boundary timer interrupts movement and starts tracing. |
+| Tracing fails | Record loss and pay compensation if tracing fails or its five-day deadline expires. |
+| Wrong delivery address | Correct the address and agree any surcharge before retrying, otherwise return. |
+| Recipient unavailable | Allow three delivery attempts, then wait for depot collection. |
+| Depot collection | Verify the collector and record proof. Return the parcel if the seven-day hold expires. |
+| Damage at delivery | Agree a replacement and retry delivery, or return the parcel. |
+| Refusal or COD failure | Return the parcel and adjust charges. |
+| Missing delivery proof | Recover proof or verify receipt. Keep verification open until receipt is confirmed. |
+| Cancellation during transport | Interrupt transport, compensate the recorded charge minus the fee and return the parcel. |
 
-### BPMN Approach
+### BPMN Elements Used
 
-Human actions use user tasks. Automatic scheduling, scanning and recording use service tasks. Business rule tasks represent booking and surcharge rules. Exclusive gateways select outcomes. Parallel gateways coordinate movement and tracking. Event-based gateways wait for messages or timers. A sequential multi-instance subprocess represents repeated shipment legs. Error recovery and compensation handle failed operations and cancelled charges.
+| Element | Use in the process |
+|---|---|
+| User task | Booking, collection, inspections, document checks, delivery and proof verification. |
+| Service task | Scheduling, recording, scanning, movement, replacement, return and invoicing. |
+| Business rule task | Booking validation and charge calculation. |
+| Send task | Tracking, customs requests, delay notices and delivery notifications. |
+| Receive task | Customs-document receipt and depot collection. |
+| Exclusive gateway | Selecting booking, pickup, transit and delivery outcomes. |
+| Parallel gateway | Starting and joining transport and tracking. |
+| Event-based gateway | Waiting for arrival, delay or an ETA timeout. |
+| Intermediate timer catch | Next-day retries and the ETA deadline. |
+| Intermediate message catch | Arrival and delay messages. |
+| Boundary event | Handling timers, errors, cancellation and compensation. |
+| Intermediate compensation throw | Triggering the shipment-charge refund. |
+| Sequential multi-instance subprocess | Repeating transport for each planned leg. |
+| Terminate end event | Ending remaining parallel work after return or loss. |
+| Association | Linking the compensation boundary to the refund task. |
 
 ### Final Outcomes
 
-- **Delivered:** the parcel is handed over, proof is recorded and the shipment is closed.
-- **Returned:** the parcel goes back to the sender after an unresolved delivery or transit problem.
-- **Lost:** tracing fails and the loss is recorded with compensation.
-- **Cancelled:** the booking ends before successful dispatch or collection.
+- **Shipment delivered:** receipt is verified and the shipment is closed.
+- **Booking cancelled:** pickup fails or packaging remains unsafe.
+- **Returned to sender:** an unresolved problem or cancellation requires return.
+- **Parcel lost:** tracing fails and compensation is recorded.
 
-### Modelling Assumptions
+### Modelling Notes
 
-A shipment may contain several transport legs. Customs processing applies to international shipments. Retry, tracing and holding periods are defined by courier policy. An authorized collector must provide acceptable identity and authorization. This is a business-process model within syllabus Units 1-4.
+- Pickup permits two attempts.
+- Delivery permits three attempts.
+- Depot collection has a seven-day holding period.
+- Missing scans trigger tracing after 48 hours.
+- Tracing has a five-day deadline.
+- Customs-document requests have a five-day response deadline.
+- Transport repeats sequentially for the planned shipment legs.
+- Address changes and surcharges are handled through a user task and gateway.
+
+---
+
+## Model Scope
+
+These are non-executable BPMN diagrams for Camunda Modeler 8.
+
+The main path shows successful completion. Alternate paths show corrections, retries, manual recovery and unsuccessful outcomes.
