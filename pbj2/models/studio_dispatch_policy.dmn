@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ns0:definitions xmlns:ns0="https://www.omg.org/spec/DMN/20191111/MODEL/" id="studio_dispatch_policy_definitions" name="Value and delivery routing" namespace="https://example.org/workflow-studio">
+  <ns0:decision id="studio_dispatch_policy" name="Value and delivery routing">
+    <ns0:decisionTable id="studio_dispatch_policy_table" hitPolicy="FIRST">
+      <ns0:input id="studio_dispatch_policy_input0" label="orderTotal">
+        <ns0:inputExpression id="studio_dispatch_policy_expr0" typeRef="number">
+          <ns0:text>orderTotal</ns0:text>
+        </ns0:inputExpression>
+      </ns0:input>
+      <ns0:input id="studio_dispatch_policy_input1" label="customerCategory">
+        <ns0:inputExpression id="studio_dispatch_policy_expr1" typeRef="string">
+          <ns0:text>customerCategory</ns0:text>
+        </ns0:inputExpression>
+      </ns0:input>
+      <ns0:input id="studio_dispatch_policy_input2" label="deliveryMode">
+        <ns0:inputExpression id="studio_dispatch_policy_expr2" typeRef="string">
+          <ns0:text>deliveryMode</ns0:text>
+        </ns0:inputExpression>
+      </ns0:input>
+      <ns0:output id="studio_dispatch_policy_output" name="route" label="Route" typeRef="string" />
+      <ns0:rule id="studio_dispatch_policy_rule0">
+        <ns0:inputEntry id="studio_dispatch_policy_test0_0">
+          <ns0:text>&gt;= 1500</ns0:text>
+        </ns0:inputEntry>
+        <ns0:inputEntry id="studio_dispatch_policy_test0_1">
+          <ns0:text>-</ns0:text>
+        </ns0:inputEntry>
+        <ns0:inputEntry id="studio_dispatch_policy_test0_2">
+          <ns0:text>-</ns0:text>
+        </ns0:inputEntry>
+        <ns0:outputEntry id="studio_dispatch_policy_result0">
+          <ns0:text>"AUDIT"</ns0:text>
+        </ns0:outputEntry>
+      </ns0:rule>
+      <ns0:rule id="studio_dispatch_policy_rule1">
+        <ns0:inputEntry id="studio_dispatch_policy_test1_0">
+          <ns0:text>-</ns0:text>
+        </ns0:inputEntry>
+        <ns0:inputEntry id="studio_dispatch_policy_test1_1">
+          <ns0:text>"MEMBER"</ns0:text>
+        </ns0:inputEntry>
+        <ns0:inputEntry id="studio_dispatch_policy_test1_2">
+          <ns0:text>"EXPRESS"</ns0:text>
+        </ns0:inputEntry>
+        <ns0:outputEntry id="studio_dispatch_policy_result1">
+          <ns0:text>"PRIORITY"</ns0:text>
+        </ns0:outputEntry>
+      </ns0:rule>
+      <ns0:rule id="studio_dispatch_policy_rule2">
+        <ns0:inputEntry id="studio_dispatch_policy_test2_0">
+          <ns0:text>-</ns0:text>
+        </ns0:inputEntry>
+        <ns0:inputEntry id="studio_dispatch_policy_test2_1">
+          <ns0:text>-</ns0:text>
+        </ns0:inputEntry>
+        <ns0:inputEntry id="studio_dispatch_policy_test2_2">
+          <ns0:text>"EXPRESS"</ns0:text>
+        </ns0:inputEntry>
+        <ns0:outputEntry id="studio_dispatch_policy_result2">
+          <ns0:text>"EXPRESS"</ns0:text>
+        </ns0:outputEntry>
+      </ns0:rule>
+      <ns0:rule id="studio_dispatch_policy_rule3">
+        <ns0:inputEntry id="studio_dispatch_policy_test3_0">
+          <ns0:text>-</ns0:text>
+        </ns0:inputEntry>
+        <ns0:inputEntry id="studio_dispatch_policy_test3_1">
+          <ns0:text>-</ns0:text>
+        </ns0:inputEntry>
+        <ns0:inputEntry id="studio_dispatch_policy_test3_2">
+          <ns0:text>-</ns0:text>
+        </ns0:inputEntry>
+        <ns0:outputEntry id="studio_dispatch_policy_result3">
+          <ns0:text>"ECONOMY"</ns0:text>
+        </ns0:outputEntry>
+      </ns0:rule>
+    </ns0:decisionTable>
+  </ns0:decision>
+</ns0:definitions>

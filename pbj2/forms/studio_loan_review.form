@@ -1,0 +1,16 @@
+{
+  "id": "studio_loan_review",
+  "type": "default",
+  "schemaVersion": 16,
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.8.0",
+  "components": [
+    {
+      "id": "studio_loan_review_field",
+      "key": "officerApproved",
+      "label": "Approve loan?",
+      "type": "checkbox",
+      "validate": {}
+    }
+  ]
+}

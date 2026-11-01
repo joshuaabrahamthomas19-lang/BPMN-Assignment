@@ -1,0 +1,16 @@
+{
+  "id": "studio_urgent_handoff",
+  "type": "default",
+  "schemaVersion": 16,
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.8.0",
+  "components": [
+    {
+      "id": "studio_urgent_handoff_field",
+      "key": "handoffAcknowledged",
+      "label": "Handoff acknowledged?",
+      "type": "checkbox",
+      "validate": {}
+    }
+  ]
+}

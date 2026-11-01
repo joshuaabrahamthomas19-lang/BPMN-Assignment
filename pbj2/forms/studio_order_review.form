@@ -1,0 +1,16 @@
+{
+  "id": "studio_order_review",
+  "type": "default",
+  "schemaVersion": 16,
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.8.0",
+  "components": [
+    {
+      "id": "studio_order_review_field",
+      "key": "purchaseApproved",
+      "label": "Approve purchase?",
+      "type": "checkbox",
+      "validate": {}
+    }
+  ]
+}

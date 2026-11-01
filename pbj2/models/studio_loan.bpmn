@@ -1,0 +1,247 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" id="studio_loan_definitions" targetNamespace="https://example.org/workflow-studio" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.8.0">
+  <bpmn:process id="studio_loan" name="Community lending with affordability review" isExecutable="true">
+    <bpmn:startEvent id="l_start" name="Application received">
+      <bpmn:outgoing>studio_loan_f0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="l_check" name="Check identity and affordability">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="studio.loan.check" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>studio_loan_f0</bpmn:incoming>
+      <bpmn:outgoing>studio_loan_f1</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="l_valid" name="Eligible identity?" default="studio_loan_f3">
+      <bpmn:incoming>studio_loan_f1</bpmn:incoming>
+      <bpmn:outgoing>studio_loan_f2</bpmn:outgoing>
+      <bpmn:outgoing>studio_loan_f3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="l_invalid" name="Invalid application">
+      <bpmn:incoming>studio_loan_f3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:businessRuleTask id="l_decide" name="Evaluate lending policy">
+      <bpmn:extensionElements>
+        <zeebe:calledDecision decisionId="studio_lending_policy" resultVariable="route" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>studio_loan_f12</bpmn:incoming>
+      <bpmn:outgoing>studio_loan_f4</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:exclusiveGateway id="l_route" name="Lending route?" default="studio_loan_f7">
+      <bpmn:incoming>studio_loan_f4</bpmn:incoming>
+      <bpmn:outgoing>studio_loan_f5</bpmn:outgoing>
+      <bpmn:outgoing>studio_loan_f6</bpmn:outgoing>
+      <bpmn:outgoing>studio_loan_f7</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="l_review" name="Underwriter decision">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="studio_loan_review" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>studio_loan_f7</bpmn:incoming>
+      <bpmn:outgoing>studio_loan_f8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="l_reviewed" name="Approved by officer?" default="studio_loan_f10">
+      <bpmn:incoming>studio_loan_f8</bpmn:incoming>
+      <bpmn:outgoing>studio_loan_f9</bpmn:outgoing>
+      <bpmn:outgoing>studio_loan_f10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="l_pay" name="Record simulated disbursement">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="studio.loan.pay" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>studio_loan_f5</bpmn:incoming>
+      <bpmn:incoming>studio_loan_f9</bpmn:incoming>
+      <bpmn:outgoing>studio_loan_f11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="l_done" name="Loan released">
+      <bpmn:incoming>studio_loan_f11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="l_reject" name="Loan declined">
+      <bpmn:incoming>studio_loan_f6</bpmn:incoming>
+      <bpmn:incoming>studio_loan_f10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="l_credit" name="Request mock credit assessment">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="POST" target="method" />
+          <zeebe:input source="=mockApiBaseUrl + &quot;/api/credit&quot;" target="url" />
+          <zeebe:input source="={applicationId: applicationId, mockCreditScore: mockCreditScore}" target="body" />
+          <zeebe:input source="=5" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="=5" target="readTimeoutInSeconds" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultExpression" value="={creditScore: response.body.creditScore}" />
+        </zeebe:taskHeaders>
+      </bpmn:extensionElements>
+      <bpmn:incoming>studio_loan_f2</bpmn:incoming>
+      <bpmn:outgoing>studio_loan_f12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="studio_loan_f0" sourceRef="l_start" targetRef="l_check" name="" />
+    <bpmn:sequenceFlow id="studio_loan_f1" sourceRef="l_check" targetRef="l_valid" name="" />
+    <bpmn:sequenceFlow id="studio_loan_f2" sourceRef="l_valid" targetRef="l_credit" name="Valid">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=identityValid = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="studio_loan_f3" sourceRef="l_valid" targetRef="l_invalid" name="Invalid" />
+    <bpmn:sequenceFlow id="studio_loan_f4" sourceRef="l_decide" targetRef="l_route" name="" />
+    <bpmn:sequenceFlow id="studio_loan_f5" sourceRef="l_route" targetRef="l_pay" name="Automatic">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=route = "Approved"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="studio_loan_f6" sourceRef="l_route" targetRef="l_reject" name="Decline">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=route = "Rejected"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="studio_loan_f7" sourceRef="l_route" targetRef="l_review" name="Review" />
+    <bpmn:sequenceFlow id="studio_loan_f8" sourceRef="l_review" targetRef="l_reviewed" name="" />
+    <bpmn:sequenceFlow id="studio_loan_f9" sourceRef="l_reviewed" targetRef="l_pay" name="Approve">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=officerApproved = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="studio_loan_f10" sourceRef="l_reviewed" targetRef="l_reject" name="Decline" />
+    <bpmn:sequenceFlow id="studio_loan_f11" sourceRef="l_pay" targetRef="l_done" name="" />
+    <bpmn:sequenceFlow id="studio_loan_f12" sourceRef="l_credit" targetRef="l_decide" name="" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="studio_loan_diagram">
+    <bpmndi:BPMNPlane id="studio_loan_plane" bpmnElement="studio_loan">
+      <bpmndi:BPMNShape id="l_start_di" bpmnElement="l_start">
+        <dc:Bounds x="60" y="122" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="20" y="166" width="120" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l_check_di" bpmnElement="l_check">
+        <dc:Bounds x="150" y="100" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l_valid_di" bpmnElement="l_valid">
+        <dc:Bounds x="350" y="115" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="310" y="173" width="120" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l_invalid_di" bpmnElement="l_invalid">
+        <dc:Bounds x="700" y="342" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="660" y="386" width="120" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l_decide_di" bpmnElement="l_decide">
+        <dc:Bounds x="670" y="100" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l_route_di" bpmnElement="l_route">
+        <dc:Bounds x="870" y="115" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="830" y="173" width="120" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l_review_di" bpmnElement="l_review">
+        <dc:Bounds x="990" y="260" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l_reviewed_di" bpmnElement="l_reviewed">
+        <dc:Bounds x="1190" y="275" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1150" y="333" width="120" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l_pay_di" bpmnElement="l_pay">
+        <dc:Bounds x="1320" y="100" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l_done_di" bpmnElement="l_done">
+        <dc:Bounds x="1530" y="122" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1490" y="166" width="120" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l_reject_di" bpmnElement="l_reject">
+        <dc:Bounds x="1330" y="452" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1290" y="496" width="120" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l_credit_di" bpmnElement="l_credit">
+        <dc:Bounds x="460" y="100" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="studio_loan_f0_di" bpmnElement="studio_loan_f0">
+        <di:waypoint x="96" y="140.0" />
+        <di:waypoint x="150" y="140.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="studio_loan_f1_di" bpmnElement="studio_loan_f1">
+        <di:waypoint x="300" y="140.0" />
+        <di:waypoint x="350" y="140.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="studio_loan_f2_di" bpmnElement="studio_loan_f2">
+        <di:waypoint x="400" y="140.0" />
+        <di:waypoint x="460" y="140.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="405" y="115.0" width="110" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="studio_loan_f3_di" bpmnElement="studio_loan_f3">
+        <di:waypoint x="400" y="140.0" />
+        <di:waypoint x="550.0" y="140.0" />
+        <di:waypoint x="550.0" y="360.0" />
+        <di:waypoint x="700" y="360.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="405" y="115.0" width="110" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="studio_loan_f4_di" bpmnElement="studio_loan_f4">
+        <di:waypoint x="820" y="140.0" />
+        <di:waypoint x="870" y="140.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="studio_loan_f5_di" bpmnElement="studio_loan_f5">
+        <di:waypoint x="920" y="140.0" />
+        <di:waypoint x="1320" y="140.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="925" y="115.0" width="110" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="studio_loan_f6_di" bpmnElement="studio_loan_f6">
+        <di:waypoint x="920" y="140.0" />
+        <di:waypoint x="1125.0" y="140.0" />
+        <di:waypoint x="1125.0" y="470.0" />
+        <di:waypoint x="1330" y="470.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="925" y="115.0" width="110" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="studio_loan_f7_di" bpmnElement="studio_loan_f7">
+        <di:waypoint x="920" y="140.0" />
+        <di:waypoint x="955.0" y="140.0" />
+        <di:waypoint x="955.0" y="300.0" />
+        <di:waypoint x="990" y="300.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="925" y="115.0" width="110" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="studio_loan_f8_di" bpmnElement="studio_loan_f8">
+        <di:waypoint x="1140" y="300.0" />
+        <di:waypoint x="1190" y="300.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="studio_loan_f9_di" bpmnElement="studio_loan_f9">
+        <di:waypoint x="1240" y="300.0" />
+        <di:waypoint x="1280.0" y="300.0" />
+        <di:waypoint x="1280.0" y="140.0" />
+        <di:waypoint x="1320" y="140.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1245" y="275.0" width="110" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="studio_loan_f10_di" bpmnElement="studio_loan_f10">
+        <di:waypoint x="1240" y="300.0" />
+        <di:waypoint x="1285.0" y="300.0" />
+        <di:waypoint x="1285.0" y="470.0" />
+        <di:waypoint x="1330" y="470.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1245" y="275.0" width="110" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="studio_loan_f11_di" bpmnElement="studio_loan_f11">
+        <di:waypoint x="1470" y="140.0" />
+        <di:waypoint x="1530" y="140.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="studio_loan_f12_di" bpmnElement="studio_loan_f12">
+        <di:waypoint x="610" y="140.0" />
+        <di:waypoint x="670" y="140.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
