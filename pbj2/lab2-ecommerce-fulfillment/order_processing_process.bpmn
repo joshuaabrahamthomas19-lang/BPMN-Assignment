@@ -1,0 +1,279 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" id="Definitions_EcommerceOrder" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.25.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.8.0">
+  <bpmn:process id="PBJ2_OrderProcessing" name="End-to-End E-Commerce Order Processing and Fulfilment" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_OrderPlaced" name="Order Placed">
+      <bpmn:outgoing>Flow_StartToValidateInventory</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_ValidateInventory" name="Check Order and Stock">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="validate-inventory-worker" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_StartToValidateInventory</bpmn:incoming>
+      <bpmn:outgoing>Flow_InventoryToGateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_StockCheck" name="Stock Available?">
+      <bpmn:incoming>Flow_InventoryToGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_StockSufficient</bpmn:outgoing>
+      <bpmn:outgoing>Flow_StockInsufficient</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="EndEvent_StockUnavailable" name="Order Cancelled - Out of Stock">
+      <bpmn:incoming>Flow_StockInsufficient</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:businessRuleTask id="Task_DetermineOrderPriority" name="Set Delivery Priority">
+      <bpmn:extensionElements>
+        <zeebe:calledDecision decisionId="pbj2_order_priority" resultVariable="priorityDecision" />
+        <zeebe:ioMapping>
+          <zeebe:output source="=priorityDecision.deliveryPriority" target="deliveryPriority" />
+          <zeebe:output source="=priorityDecision.shippingLane" target="shippingLane" />
+          <zeebe:output source="=priorityDecision.requiresManualVerification" target="requiresManualVerification" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_StockSufficient</bpmn:incoming>
+      <bpmn:outgoing>Flow_PriorityToGateway</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:exclusiveGateway id="Gateway_VerificationRequired" name="Manual Verification Needed?">
+      <bpmn:incoming>Flow_PriorityToGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_NeedsVerification</bpmn:outgoing>
+      <bpmn:outgoing>Flow_DirectToPayment</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_ManualVerification" name="Verify High-Value Order">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="pbj2_order_verification" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_NeedsVerification</bpmn:incoming>
+      <bpmn:outgoing>Flow_VerificationDecision</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_VerificationOutcome" name="Order Verified?">
+      <bpmn:incoming>Flow_VerificationDecision</bpmn:incoming>
+      <bpmn:outgoing>Flow_VerificationApproved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_VerificationRejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="EndEvent_VerificationRejected" name="Order Rejected by Auditor">
+      <bpmn:incoming>Flow_VerificationRejected</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Task_ProcessPayment" name="Process Mock Payment">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="POST" target="method" />
+          <zeebe:input source="=mockApiBaseUrl + &quot;/api/payment&quot;" target="url" />
+          <zeebe:input source="={orderId: orderId, customerRef: customerRef, orderTotal: orderTotal, paymentToken: paymentToken, simulateError: simulatePaymentError}" target="body" />
+          <zeebe:input source="=10" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="=10" target="readTimeoutInSeconds" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultExpression" value="={paymentStatus: response.body.paymentStatus, transactionId: response.body.transactionId, paymentMessage: response.body.message}" />
+        </zeebe:taskHeaders>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_DirectToPayment</bpmn:incoming>
+      <bpmn:incoming>Flow_VerificationApproved</bpmn:incoming>
+      <bpmn:outgoing>Flow_PaymentToOutcomeGateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_PaymentOutcome" name="Payment Status?">
+      <bpmn:incoming>Flow_PaymentToOutcomeGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_PaymentSuccessful</bpmn:outgoing>
+      <bpmn:outgoing>Flow_PaymentDeclined</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="EndEvent_PaymentDeclined" name="Order Cancelled - Payment Declined">
+      <bpmn:incoming>Flow_PaymentDeclined</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Task_DispatchFulfilment" name="Dispatch Confirmed Order">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="fulfill-order-worker" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_PaymentSuccessful</bpmn:incoming>
+      <bpmn:outgoing>Flow_FulfilmentToEnd</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_OrderFulfilled" name="Order Dispatched and Fulfilled">
+      <bpmn:incoming>Flow_FulfilmentToEnd</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_StartToValidateInventory" sourceRef="StartEvent_OrderPlaced" targetRef="Task_ValidateInventory" />
+    <bpmn:sequenceFlow id="Flow_InventoryToGateway" sourceRef="Task_ValidateInventory" targetRef="Gateway_StockCheck" />
+    <bpmn:sequenceFlow id="Flow_StockSufficient" name="Stock Available" sourceRef="Gateway_StockCheck" targetRef="Task_DetermineOrderPriority">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=isStockAvailable = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_StockInsufficient" name="Out of Stock" sourceRef="Gateway_StockCheck" targetRef="EndEvent_StockUnavailable">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=isStockAvailable = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_PriorityToGateway" sourceRef="Task_DetermineOrderPriority" targetRef="Gateway_VerificationRequired" />
+    <bpmn:sequenceFlow id="Flow_NeedsVerification" name="Verification Needed" sourceRef="Gateway_VerificationRequired" targetRef="Task_ManualVerification">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=requiresManualVerification = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_DirectToPayment" name="Standard Processing" sourceRef="Gateway_VerificationRequired" targetRef="Task_ProcessPayment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=requiresManualVerification = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_VerificationDecision" sourceRef="Task_ManualVerification" targetRef="Gateway_VerificationOutcome" />
+    <bpmn:sequenceFlow id="Flow_VerificationApproved" name="Approved" sourceRef="Gateway_VerificationOutcome" targetRef="Task_ProcessPayment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=isAuditorApproved = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_VerificationRejected" name="Rejected" sourceRef="Gateway_VerificationOutcome" targetRef="EndEvent_VerificationRejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=isAuditorApproved = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_PaymentToOutcomeGateway" sourceRef="Task_ProcessPayment" targetRef="Gateway_PaymentOutcome" />
+    <bpmn:sequenceFlow id="Flow_PaymentSuccessful" name="SUCCESS" sourceRef="Gateway_PaymentOutcome" targetRef="Task_DispatchFulfilment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=paymentStatus = "SUCCESS"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_PaymentDeclined" name="DECLINED" sourceRef="Gateway_PaymentOutcome" targetRef="EndEvent_PaymentDeclined">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=paymentStatus != "SUCCESS"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_FulfilmentToEnd" sourceRef="Task_DispatchFulfilment" targetRef="EndEvent_OrderFulfilled" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_EcommerceOrder">
+    <bpmndi:BPMNPlane id="BPMNPlane_EcommerceOrder" bpmnElement="PBJ2_OrderProcessing">
+      <bpmndi:BPMNShape id="StartEvent_OrderPlaced_di" bpmnElement="StartEvent_OrderPlaced">
+        <dc:Bounds x="160" y="240" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="146" y="283" width="65" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ValidateInventory_di" bpmnElement="Task_ValidateInventory">
+        <dc:Bounds x="250" y="218" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_StockCheck_di" bpmnElement="Gateway_StockCheck" isMarkerVisible="true">
+        <dc:Bounds x="430" y="233" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="414" y="209" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_StockUnavailable_di" bpmnElement="EndEvent_StockUnavailable">
+        <dc:Bounds x="437" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="413" y="405" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DetermineOrderPriority_di" bpmnElement="Task_DetermineOrderPriority">
+        <dc:Bounds x="530" y="218" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_VerificationRequired_di" bpmnElement="Gateway_VerificationRequired" isMarkerVisible="true">
+        <dc:Bounds x="720" y="233" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="702" y="196" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ManualVerification_di" bpmnElement="Task_ManualVerification">
+        <dc:Bounds x="820" y="100" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_VerificationOutcome_di" bpmnElement="Gateway_VerificationOutcome" isMarkerVisible="true">
+        <dc:Bounds x="1000" y="115" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="987" y="91" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_VerificationRejected_di" bpmnElement="EndEvent_VerificationRejected">
+        <dc:Bounds x="1112" y="122" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1090" y="165" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ProcessPayment_di" bpmnElement="Task_ProcessPayment">
+        <dc:Bounds x="870" y="218" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_PaymentOutcome_di" bpmnElement="Gateway_PaymentOutcome" isMarkerVisible="true">
+        <dc:Bounds x="1060" y="233" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1042" y="209" width="86" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_PaymentDeclined_di" bpmnElement="EndEvent_PaymentDeclined">
+        <dc:Bounds x="1067" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1042" y="405" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DispatchFulfilment_di" bpmnElement="Task_DispatchFulfilment">
+        <dc:Bounds x="1170" y="218" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_OrderFulfilled_di" bpmnElement="EndEvent_OrderFulfilled">
+        <dc:Bounds x="1362" y="240" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1337" y="283" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_StartToValidateInventory_di" bpmnElement="Flow_StartToValidateInventory">
+        <di:waypoint x="196" y="258" />
+        <di:waypoint x="250" y="258" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_InventoryToGateway_di" bpmnElement="Flow_InventoryToGateway">
+        <di:waypoint x="380" y="258" />
+        <di:waypoint x="430" y="258" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_StockSufficient_di" bpmnElement="Flow_StockSufficient">
+        <di:waypoint x="480" y="258" />
+        <di:waypoint x="530" y="258" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="468" y="240" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_StockInsufficient_di" bpmnElement="Flow_StockInsufficient">
+        <di:waypoint x="455" y="283" />
+        <di:waypoint x="455" y="362" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="461" y="318" width="63" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PriorityToGateway_di" bpmnElement="Flow_PriorityToGateway">
+        <di:waypoint x="670" y="258" />
+        <di:waypoint x="720" y="258" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NeedsVerification_di" bpmnElement="Flow_NeedsVerification">
+        <di:waypoint x="745" y="233" />
+        <di:waypoint x="745" y="140" />
+        <di:waypoint x="820" y="140" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="747" y="156" width="56" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DirectToPayment_di" bpmnElement="Flow_DirectToPayment">
+        <di:waypoint x="770" y="258" />
+        <di:waypoint x="870" y="258" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="782" y="240" width="56" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_VerificationDecision_di" bpmnElement="Flow_VerificationDecision">
+        <di:waypoint x="950" y="140" />
+        <di:waypoint x="1000" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_VerificationApproved_di" bpmnElement="Flow_VerificationApproved">
+        <di:waypoint x="1025" y="165" />
+        <di:waypoint x="1025" y="190" />
+        <di:waypoint x="940" y="190" />
+        <di:waypoint x="940" y="218" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="958" y="172" width="48" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_VerificationRejected_di" bpmnElement="Flow_VerificationRejected">
+        <di:waypoint x="1050" y="140" />
+        <di:waypoint x="1112" y="140" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1059" y="122" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PaymentToOutcomeGateway_di" bpmnElement="Flow_PaymentToOutcomeGateway">
+        <di:waypoint x="1010" y="258" />
+        <di:waypoint x="1060" y="258" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PaymentSuccessful_di" bpmnElement="Flow_PaymentSuccessful">
+        <di:waypoint x="1110" y="258" />
+        <di:waypoint x="1170" y="258" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1112" y="240" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PaymentDeclined_di" bpmnElement="Flow_PaymentDeclined">
+        <di:waypoint x="1085" y="283" />
+        <di:waypoint x="1085" y="362" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1092" y="318" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FulfilmentToEnd_di" bpmnElement="Flow_FulfilmentToEnd">
+        <di:waypoint x="1300" y="258" />
+        <di:waypoint x="1362" y="258" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

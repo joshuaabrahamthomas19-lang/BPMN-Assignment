@@ -1,0 +1,137 @@
+<?xml version='1.0' encoding='utf-8'?>
+<d:definitions xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" xmlns:d="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:ns3="http://www.omg.org/spec/DMN/20180521/DC/" id="Definitions_PatientTriage" name="Patient Triage Decision Definitions" namespace="http://camunda.org/schema/1.0/dmn">
+  <d:decision id="pbj2_patient_triage" name="Patient Triage Classification">
+    <d:decisionTable id="DecisionTable_PatientTriage" hitPolicy="FIRST">
+      <d:input id="Input_urgencyIndicator" label="Urgency Indicator" biodi:width="180">
+        <d:inputExpression id="InputExpression_urgencyIndicator" typeRef="string">
+          <d:text>urgencyIndicator</d:text>
+        </d:inputExpression>
+      </d:input>
+      <d:input id="Input_symptomsSummary" label="Symptoms Summary" biodi:width="200">
+        <d:inputExpression id="InputExpression_symptomsSummary" typeRef="string">
+          <d:text>symptomsSummary</d:text>
+        </d:inputExpression>
+      </d:input>
+      <d:input id="Input_patientAge" label="Patient Age" biodi:width="150">
+        <d:inputExpression id="InputExpression_patientAge" typeRef="number">
+          <d:text>patientAge</d:text>
+        </d:inputExpression>
+      </d:input>
+      <d:output id="Output_triageCategory" label="Triage Category" name="triageCategory" typeRef="string" biodi:width="180" />
+      <d:output id="Output_maxWaitTimeHours" label="Max Wait Time (Hrs)" name="maxWaitTimeHours" typeRef="number" biodi:width="170" />
+      <d:output id="Output_recommendedDepartment" label="Recommended Dept" name="recommendedDepartment" typeRef="string" biodi:width="190" />
+      <d:rule id="Rule_1_UrgentAssessment">
+        <d:description>Life-threatening signs (chest pain, acute breathlessness) trigger immediate human clinical assessment</d:description>
+        <d:inputEntry id="UnaryTests_1_1">
+          <d:text>"CRITICAL", "EMERGENCY"</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_1_2">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_1_3">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_1_1">
+          <d:text>"Urgent Assessment"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_1_2">
+          <d:text>0.25</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_1_3">
+          <d:text>"EMERGENCY_CARE"</d:text>
+        </d:outputEntry>
+      </d:rule>
+      <d:rule id="Rule_2_VulnerablePriority">
+        <d:description>Vulnerable patients with acute symptoms get Priority Review</d:description>
+        <d:inputEntry id="UnaryTests_2_1">
+          <d:text>"MODERATE", "HIGH"</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_2_2">
+          <d:text>"FEVER_HIGH", "DIZZINESS", "FRACTURE_SUSPECTED"</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_2_3">
+          <d:text>&lt;= 6, &gt;= 70</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_2_1">
+          <d:text>"Priority Review"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_2_2">
+          <d:text>3.0</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_2_3">
+          <d:text>"URGENT_OUTPATIENT"</d:text>
+        </d:outputEntry>
+      </d:rule>
+      <d:rule id="Rule_3_ModeratePriority">
+        <d:description>Moderate pain or lingering infection needing physician review</d:description>
+        <d:inputEntry id="UnaryTests_3_1">
+          <d:text>"MODERATE"</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_3_2">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_3_3">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_3_1">
+          <d:text>"Priority Review"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_3_2">
+          <d:text>8.0</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_3_3">
+          <d:text>"SPECIALIST_CLINIC"</d:text>
+        </d:outputEntry>
+      </d:rule>
+      <d:rule id="Rule_4_RoutineConsultation">
+        <d:description>Standard checkup or mild cold/flu symptom consultation</d:description>
+        <d:inputEntry id="UnaryTests_4_1">
+          <d:text>"LOW", "ROUTINE"</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_4_2">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_4_3">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_4_1">
+          <d:text>"Routine"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_4_2">
+          <d:text>36.0</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_4_3">
+          <d:text>"GENERAL_MEDICINE"</d:text>
+        </d:outputEntry>
+      </d:rule>
+      <d:rule id="Rule_5_DefaultRoutine">
+        <d:description>Default triage fallback routes to routine general medicine</d:description>
+        <d:inputEntry id="UnaryTests_5_1">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_5_2">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_5_3">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_5_1">
+          <d:text>"Routine"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_5_2">
+          <d:text>48.0</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_5_3">
+          <d:text>"GENERAL_MEDICINE"</d:text>
+        </d:outputEntry>
+      </d:rule>
+    </d:decisionTable>
+  </d:decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_PatientTriage">
+      <dmndi:DMNShape id="DMNShape_decision_patient_triage" dmnElementRef="pbj2_patient_triage">
+        <ns3:Bounds height="80" width="220" x="160" y="100" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</d:definitions>

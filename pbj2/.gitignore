@@ -1,0 +1,4 @@
+common-worker/target/
+.env
+*.log
+__pycache__/

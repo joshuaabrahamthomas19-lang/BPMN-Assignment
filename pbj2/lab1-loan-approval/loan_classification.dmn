@@ -1,0 +1,179 @@
+<?xml version='1.0' encoding='utf-8'?>
+<d:definitions xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" xmlns:d="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:ns3="http://www.omg.org/spec/DMN/20180521/DC/" id="Definitions_LoanClassification" name="Loan Classification Decision Definitions" namespace="http://camunda.org/schema/1.0/dmn">
+  <d:decision id="pbj2_loan_classification" name="Loan Eligibility &amp; Classification">
+    <d:decisionTable id="DecisionTable_LoanClassification" hitPolicy="FIRST">
+      <d:input id="Input_creditScore" label="Credit Score" biodi:width="170">
+        <d:inputExpression id="InputExpression_creditScore" typeRef="number">
+          <d:text>creditScore</d:text>
+        </d:inputExpression>
+      </d:input>
+      <d:input id="Input_monthlyIncome" label="Monthly Income (USD)" biodi:width="190">
+        <d:inputExpression id="InputExpression_monthlyIncome" typeRef="number">
+          <d:text>monthlyIncome</d:text>
+        </d:inputExpression>
+      </d:input>
+      <d:input id="Input_requestedAmount" label="Requested Amount (USD)" biodi:width="190">
+        <d:inputExpression id="InputExpression_requestedAmount" typeRef="number">
+          <d:text>requestedAmount</d:text>
+        </d:inputExpression>
+      </d:input>
+      <d:output id="Output_classification" label="Classification" name="classification" typeRef="string" biodi:width="160" />
+      <d:output id="Output_riskRating" label="Risk Rating" name="riskRating" typeRef="string" biodi:width="140" />
+      <d:output id="Output_interestRate" label="Interest Rate (%)" name="interestRate" typeRef="number" biodi:width="160" />
+      <d:rule id="Rule_1_PrimeApprove">
+        <d:description>Prime applicants with excellent credit score and robust income are auto-approved</d:description>
+        <d:inputEntry id="UnaryTests_1_1">
+          <d:text>&gt;= 740</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_1_2">
+          <d:text>&gt;= 5000</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_1_3">
+          <d:text>&lt;= 40000</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_1_1">
+          <d:text>"Approved"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_1_2">
+          <d:text>"LOW"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_1_3">
+          <d:text>5.9</d:text>
+        </d:outputEntry>
+      </d:rule>
+      <d:rule id="Rule_2_HighAmountReview">
+        <d:description>Large principal loans require loan officer signoff despite high credit score</d:description>
+        <d:inputEntry id="UnaryTests_2_1">
+          <d:text>&gt;= 700</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_2_2">
+          <d:text>&gt;= 7000</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_2_3">
+          <d:text>&gt; 40000</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_2_1">
+          <d:text>"Manual Review"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_2_2">
+          <d:text>"MEDIUM"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_2_3">
+          <d:text>6.8</d:text>
+        </d:outputEntry>
+      </d:rule>
+      <d:rule id="Rule_3_StandardApprove">
+        <d:description>Standard applicants with good credit score and sufficient debt serviceability</d:description>
+        <d:inputEntry id="UnaryTests_3_1">
+          <d:text>[650..739]</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_3_2">
+          <d:text>&gt;= 4000</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_3_3">
+          <d:text>&lt;= 25000</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_3_1">
+          <d:text>"Approved"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_3_2">
+          <d:text>"MEDIUM"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_3_3">
+          <d:text>8.2</d:text>
+        </d:outputEntry>
+      </d:rule>
+      <d:rule id="Rule_4_BorderlineReview">
+        <d:description>Borderline credit ratings need underwriter evaluation</d:description>
+        <d:inputEntry id="UnaryTests_4_1">
+          <d:text>[600..649]</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_4_2">
+          <d:text>&gt;= 3000</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_4_3">
+          <d:text>&lt;= 30000</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_4_1">
+          <d:text>"Manual Review"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_4_2">
+          <d:text>"MEDIUM_HIGH"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_4_3">
+          <d:text>9.5</d:text>
+        </d:outputEntry>
+      </d:rule>
+      <d:rule id="Rule_5_LowIncomeReject">
+        <d:description>Income fails to meet minimum subsistence threshold</d:description>
+        <d:inputEntry id="UnaryTests_5_1">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_5_2">
+          <d:text>&lt; 2500</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_5_3">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_5_1">
+          <d:text>"Rejected"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_5_2">
+          <d:text>"HIGH"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_5_3">
+          <d:text>0.0</d:text>
+        </d:outputEntry>
+      </d:rule>
+      <d:rule id="Rule_6_LowCreditScoreReject">
+        <d:description>Sub-prime credit score below minimum underwriting risk appetite</d:description>
+        <d:inputEntry id="UnaryTests_6_1">
+          <d:text>&lt; 600</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_6_2">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_6_3">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_6_1">
+          <d:text>"Rejected"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_6_2">
+          <d:text>"HIGH"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_6_3">
+          <d:text>0.0</d:text>
+        </d:outputEntry>
+      </d:rule>
+      <d:rule id="Rule_7_DefaultFallback">
+        <d:description>Default fallback catch-all routes to manual officer review</d:description>
+        <d:inputEntry id="UnaryTests_7_1">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_7_2">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_7_3">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_7_1">
+          <d:text>"Manual Review"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_7_2">
+          <d:text>"HIGH"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_7_3">
+          <d:text>10.0</d:text>
+        </d:outputEntry>
+      </d:rule>
+    </d:decisionTable>
+  </d:decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_LoanClassification">
+      <dmndi:DMNShape id="DMNShape_decision_loan_classification" dmnElementRef="pbj2_loan_classification">
+        <ns3:Bounds height="80" width="220" x="160" y="100" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</d:definitions>

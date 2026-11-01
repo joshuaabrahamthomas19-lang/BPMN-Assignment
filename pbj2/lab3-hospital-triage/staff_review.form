@@ -1,0 +1,38 @@
+{
+  "id": "pbj2_staff_review",
+  "type": "default",
+  "schemaVersion": 16,
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.8.0",
+  "components": [
+    {
+      "id": "staff_review0",
+      "key": "staffResolution",
+      "label": "Staff decision",
+      "type": "select",
+      "values": [
+        {
+          "label": "BookSlot",
+          "value": "BookSlot"
+        },
+        {
+          "label": "Waitlist",
+          "value": "Waitlist"
+        },
+        {
+          "label": "Decline",
+          "value": "Decline"
+        }
+      ],
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "id": "staff_review1",
+      "key": "assignedSlot",
+      "label": "Appointment slot (needed to book)",
+      "type": "textfield"
+    }
+  ]
+}

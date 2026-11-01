@@ -1,0 +1,15 @@
+{
+  "id": "pbj2_urgent_assessment",
+  "type": "default",
+  "schemaVersion": 16,
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.8.0",
+  "components": [
+    {
+      "id": "urgent_assessment0",
+      "key": "assessmentNotes",
+      "label": "Record the simulated handoff",
+      "type": "textfield"
+    }
+  ]
+}

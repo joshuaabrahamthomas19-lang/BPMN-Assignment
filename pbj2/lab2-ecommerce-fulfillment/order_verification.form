@@ -1,0 +1,15 @@
+{
+  "id": "pbj2_order_verification",
+  "type": "default",
+  "schemaVersion": 16,
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.8.0",
+  "components": [
+    {
+      "id": "order_verification0",
+      "key": "isAuditorApproved",
+      "label": "Approve order?",
+      "type": "checkbox"
+    }
+  ]
+}

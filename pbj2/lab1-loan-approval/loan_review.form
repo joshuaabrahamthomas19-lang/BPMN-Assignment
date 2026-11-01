@@ -1,0 +1,32 @@
+{
+  "id": "pbj2_loan_review",
+  "type": "default",
+  "schemaVersion": 16,
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.8.0",
+  "components": [
+    {
+      "id": "loan_review0",
+      "key": "officerDecision",
+      "label": "Officer decision",
+      "type": "select",
+      "values": [
+        {
+          "label": "Approve",
+          "value": "Approve"
+        },
+        {
+          "label": "Reject",
+          "value": "Reject"
+        },
+        {
+          "label": "Retry",
+          "value": "Retry"
+        }
+      ],
+      "validate": {
+        "required": true
+      }
+    }
+  ]
+}

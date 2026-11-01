@@ -1,0 +1,137 @@
+<?xml version='1.0' encoding='utf-8'?>
+<d:definitions xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" xmlns:d="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:ns3="http://www.omg.org/spec/DMN/20180521/DC/" id="Definitions_OrderPriority" name="Order Priority Determination Definitions" namespace="http://camunda.org/schema/1.0/dmn">
+  <d:decision id="pbj2_order_priority" name="Order Priority &amp; Routing">
+    <d:decisionTable id="DecisionTable_OrderPriority" hitPolicy="FIRST">
+      <d:input id="Input_orderTotal" label="Order Total ($)" biodi:width="180">
+        <d:inputExpression id="InputExpression_orderTotal" typeRef="number">
+          <d:text>orderTotal</d:text>
+        </d:inputExpression>
+      </d:input>
+      <d:input id="Input_customerCategory" label="Customer Category" biodi:width="190">
+        <d:inputExpression id="InputExpression_customerCategory" typeRef="string">
+          <d:text>customerCategory</d:text>
+        </d:inputExpression>
+      </d:input>
+      <d:input id="Input_deliveryPreference" label="Delivery Preference" biodi:width="190">
+        <d:inputExpression id="InputExpression_deliveryPreference" typeRef="string">
+          <d:text>deliveryPreference</d:text>
+        </d:inputExpression>
+      </d:input>
+      <d:output id="Output_deliveryPriority" label="Delivery Priority" name="deliveryPriority" typeRef="string" biodi:width="160" />
+      <d:output id="Output_shippingLane" label="Shipping Lane" name="shippingLane" typeRef="string" biodi:width="160" />
+      <d:output id="Output_requiresManualVerification" label="Requires Manual Verification" name="requiresManualVerification" typeRef="boolean" biodi:width="210" />
+      <d:rule id="Rule_1_HighValueException">
+        <d:description>High value orders exceeding risk threshold trigger manual verification</d:description>
+        <d:inputEntry id="UnaryTests_1_1">
+          <d:text>&gt;= 1200</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_1_2">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_1_3">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_1_1">
+          <d:text>"EXPRESS"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_1_2">
+          <d:text>"SECURED_COURIER"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_1_3">
+          <d:text>true</d:text>
+        </d:outputEntry>
+      </d:rule>
+      <d:rule id="Rule_2_VipExpress">
+        <d:description>VIP customers requesting express delivery are routed to highest priority lane</d:description>
+        <d:inputEntry id="UnaryTests_2_1">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_2_2">
+          <d:text>"VIP", "PLATINUM"</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_2_3">
+          <d:text>"EXPRESS", "SAME_DAY"</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_2_1">
+          <d:text>"CRITICAL"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_2_2">
+          <d:text>"AIR_EXPRESS"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_2_3">
+          <d:text>false</d:text>
+        </d:outputEntry>
+      </d:rule>
+      <d:rule id="Rule_3_RegularExpress">
+        <d:description>Standard customer paying for express service</d:description>
+        <d:inputEntry id="UnaryTests_3_1">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_3_2">
+          <d:text>"REGULAR"</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_3_3">
+          <d:text>"EXPRESS"</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_3_1">
+          <d:text>"HIGH"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_3_2">
+          <d:text>"PRIORITY_GROUND"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_3_3">
+          <d:text>false</d:text>
+        </d:outputEntry>
+      </d:rule>
+      <d:rule id="Rule_4_StandardOrder">
+        <d:description>Standard order delivery</d:description>
+        <d:inputEntry id="UnaryTests_4_1">
+          <d:text>[100..1199]</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_4_2">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_4_3">
+          <d:text>"STANDARD"</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_4_1">
+          <d:text>"STANDARD"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_4_2">
+          <d:text>"STANDARD_GROUND"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_4_3">
+          <d:text>false</d:text>
+        </d:outputEntry>
+      </d:rule>
+      <d:rule id="Rule_5_Economy">
+        <d:description>Low value or economy shipping preference</d:description>
+        <d:inputEntry id="UnaryTests_5_1">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_5_2">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:inputEntry id="UnaryTests_5_3">
+          <d:text>-</d:text>
+        </d:inputEntry>
+        <d:outputEntry id="LiteralExpression_5_1">
+          <d:text>"LOW"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_5_2">
+          <d:text>"ECONOMY_POST"</d:text>
+        </d:outputEntry>
+        <d:outputEntry id="LiteralExpression_5_3">
+          <d:text>false</d:text>
+        </d:outputEntry>
+      </d:rule>
+    </d:decisionTable>
+  </d:decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_OrderPriority">
+      <dmndi:DMNShape id="DMNShape_decision_order_priority" dmnElementRef="pbj2_order_priority">
+        <ns3:Bounds height="80" width="220" x="160" y="100" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</d:definitions>
