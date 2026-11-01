@@ -1,34 +1,43 @@
-# Workflow Studio: three Camunda 8 practical labs
+# PBJ-2 Practical Assignment
 
-An original implementation of the PBJ-2 loan, commerce and patient-access exercises. The common pattern is validation by a Java worker, service integration through a REST Connector, DMN routing, human decisions in Tasklist and observable recovery in Operate.
+This folder contains the three Camunda 8 assignments: loan approval, order processing and hospital appointment management. Each lab has a BPMN process, a DMN decision table and Java workers built with Spring Boot. Mock REST APIs are used for credit checks, payments and appointment slots.
 
-**Status:** source and offline checks are provided. A running Camunda cluster is required to finish deployment, execution and screenshot evidence. No live results or screenshots are claimed by this repository.
+## Lab 1: Loan Approval
 
-## What is different
+The process checks the applicant's details and gets a credit score from the mock API. The decision table then classifies the application as Approved, Rejected or Manual Review.
 
-| Lab | Preserved concept | Original design choices |
-| --- | --- | --- |
-| Loan | Applicant validation, credit API, decision, officer review, payout | Affordability ratio, rejection rules evaluated first, new thresholds and a principal-only payment model |
-| Commerce | Inventory, priority, payment, review, shipping | Explicit stock-release path after refusal or payment decline; member delivery priority; new high-value threshold |
-| Patient access | Registration, triage, slots, staff intervention | All non-urgent requests look up slots before review; separate waitlist and decline endings; staff must supply a slot to book |
+The rules consider the credit score, requested amount and repayment affordability. Applications needing review go to a loan officer in Tasklist. Approved applications continue to a simulated disbursement step.
 
-These are educational simulations. No real transfers, inventory reservations or clinical decisions occur. The patient rules illustrate orchestration only.
+## Lab 2: Order Processing and Fulfilment
 
-## Files
+The worker checks the order details, verifies stock and calculates the total. The decision table sets the delivery priority based on order value, customer category and delivery preference.
 
-- `models/`: three executable BPMN diagrams with diagram coordinates and three FIRST-hit DMN tables.
-- `forms/`: four Camunda user-task forms.
-- `worker/`: Java/Spring Boot job workers, mock APIs and JUnit tests.
-- `examples/`: synthetic start payloads and scenario variations.
-- `docs/`: individual implementation reports, variables, API contracts and evidence checklist.
-- `scripts/validate_models.py`: offline links, graph and rule-boundary checks.
-- `VALIDATION.md`: actual local validation scope and results.
+Orders worth 1500 or more need manual verification. After approval, the process calls the mock payment API. A successful payment leads to dispatch. If payment or manual verification is declined, the process releases the stock reservation and cancels the order.
 
-## Run the services
+## Lab 3: Hospital Appointment and Patient Triage
 
-Requirements: JDK 21 or newer, Maven 3.9+, Camunda 8.8 with Tasklist, Operate and the REST Connector runtime. The model metadata and Java client are deliberately pinned to 8.8.0; use a compatible patched 8.8 installation. Python 3.11+ is needed only for the offline validator.
+The process validates the patient's registration and uses a decision table to classify the request as Routine, Priority Review or Urgent Assessment.
 
-From `worker/`:
+Urgent requests go directly to a human assessment task. Other requests use the mock scheduling API to check available slots. Routine requests with a slot can be booked directly. Priority requests and requests without a slot go to staff review, where staff can book an appointment, add the patient to the waitlist or decline the request.
+
+The patient details and triage rules are only for this assignment. They are not intended for medical use.
+
+## Folder Contents
+
+| Folder | Contents |
+| --- | --- |
+| `models` | BPMN processes and DMN decision tables for all three labs |
+| `worker` | Spring Boot application, Java workers, mock APIs and tests |
+| `forms` | Forms for the human tasks in Tasklist |
+| `examples` | Sample input data and test scenarios |
+| `docs` | Lab reports, API details, process variables and the test checklist |
+| `scripts` | A Python script for checking the model files |
+
+## How to Run
+
+The project uses Java 21 or later, Maven 3.9 or later and Camunda 8.8. Tasklist, Operate and the REST Connector runtime are needed to run the complete workflows.
+
+Start Camunda, then open a terminal in the `worker` folder and run:
 
 ```powershell
 mvn clean verify
@@ -37,43 +46,37 @@ $env:CAMUNDA_GRPC_ADDRESS='http://localhost:26500'
 mvn spring-boot:run
 ```
 
-The mock API listens on port 8090. The default client reads its connection and authentication settings from the Camunda environment variables. For an authenticated cluster, also configure `CAMUNDA_CLIENT_ID`, `CAMUNDA_CLIENT_SECRET`, `CAMUNDA_AUTHORIZATION_SERVER_URL` and the audience required by your installation. Keep secrets outside Git. See [Camunda 8.8 Java client configuration](https://docs.camunda.io/docs/8.8/apis-tools/java-client/getting-started/).
+The mock APIs run on port 8090. These commands assume a local Camunda setup. If the cluster requires authentication, configure its client credentials as described in the [Camunda Java client documentation](https://docs.camunda.io/docs/8.8/apis-tools/java-client/getting-started/).
 
-To run only the mock API, set `STUDIO_WORKERS_ENABLED=false` before starting. Fault-control endpoints are for a trusted local classroom network only.
+Next:
 
-## Deploy and execute
+1. Open the model files in Camunda Modeler.
+2. Deploy the DMN files and forms, followed by the BPMN files, to the same cluster and tenant.
+3. Start a process using the matching JSON file in `examples`.
+4. Complete any review tasks in Tasklist and check the process in Operate.
 
-1. Start your Camunda 8.8 installation and its REST Connector runtime. Configure Modeler's deployment connection for that cluster.
-2. Open each BPMN and DMN file in Camunda Modeler. Deploy the DMNs and all four forms, then the BPMNs to the same tenant. User-task form references resolve by form ID; decision references resolve by decision ID.
-3. Confirm the connector runtime can reach the Spring Boot API. Each start payload contains `mockApiBaseUrl`. `http://host.docker.internal:8090` is intended for Docker Desktop connectors calling the host. Use `http://localhost:8090` for a connector running directly on the host. For remote/SaaS connectors, supply a reachable test API URL. A remote connector cannot reach your computer's localhost.
-4. Start `studio_loan`, `studio_order` or `studio_care` using the matching JSON in `examples/`. Use Modeler's start dialog or your cluster's process-instance API. Set variables as JSON with booleans and numbers retained as their native types.
-5. Complete review tasks in Tasklist. Loan: `officerApproved`; order: `purchaseApproved`; patient scheduling: `staffResolution` and `assignedSlot`; urgent handoff: `handoffAcknowledged`. No fixed assignee is baked into the models: use the test account permitted to claim tasks in your installation.
-6. Follow `docs/TEST-AND-EVIDENCE.md` to execute the required scenarios and capture your own screenshots.
+The process IDs are `studio_loan`, `studio_order` and `studio_care`.
 
-REST Connector tasks use type `io.camunda:http-json:1`, POST, no authentication to the local mock, five-second timeouts and three retries. Input mappings contain the request bodies; `resultExpression` headers unpack response variables. They require a Connector runtime, not the Java workers in this project. Reference: [REST Connector](https://docs.camunda.io/docs/8.9/components/connectors/protocol/rest/).
+Each sample input includes `mockApiBaseUrl`. Use `http://host.docker.internal:8090` when the Connector runtime runs in Docker Desktop and the API runs on the host. Use `http://localhost:8090` when both run directly on the same computer. A remote cluster needs an API address it can reach.
 
-## Validate locally
+## Testing
 
-From the project root:
+The Java build and seven automated tests pass. The BPMN and DMN files also pass model validation, and the Python script checks 18 decision-rule cases. The mock APIs were checked for normal responses, payment decline, no available slots and recovery after a simulated outage.
+
+To run the checks from the `pbj2` folder:
 
 ```powershell
-python scripts/validate_models.py
 mvn -f worker/pom.xml clean verify
+python scripts/validate_models.py
 ```
 
-The Python rule evaluator implements only the comparisons and string literals used here. It is not a general FEEL implementation. The Maven tests validate BPMN using Camunda's model API and exercise worker/API behavior. Neither check establishes engine deployment or incident recovery.
+Full workflow execution in Camunda, Tasklist screenshots and Operate incident-recovery evidence are still pending. The scenarios and steps for recording those results are in [the test checklist](docs/TEST-AND-EVIDENCE.md). Details of the completed checks are in [VALIDATION.md](VALIDATION.md).
 
-## Publish to your repository
+## Lab Reports
 
-The project contains no copied source files, compiled reference classes or credentials. Read `docs/PROVENANCE.md` for the conceptual reference and its inspected commit.
+- [Loan approval](docs/LAB-1.md)
+- [Order processing and fulfilment](docs/LAB-2.md)
+- [Hospital appointment and triage](docs/LAB-3.md)
+- [API examples and process variables](docs/API-AND-VARIABLES.md)
 
-Create an empty repository in your account, then from this folder:
-
-```powershell
-git remote add origin https://github.com/YOUR_ACCOUNT/YOUR_REPOSITORY.git
-git push -u origin main
-```
-
-Authenticate with your own account when prompted. If the destination already contains work, inspect it and merge intentionally rather than force-pushing.
-
-For a downloaded copy with no Git history, first clone your target repository, copy this folder into `pbj2`, then run `git add pbj2` and `git commit -m "Add original Camunda 8 practical labs"` from the repository root. This preserves any earlier assignments.
+The concept reference is recorded in [PROVENANCE.md](docs/PROVENANCE.md).
